@@ -1,5 +1,303 @@
+-- DEEPALI
+
+-- add triggers
+
+CREATE TABLE patient(
+    patient_id NUMBER(10) PRIMARY KEY,
+    first_name VARCHAR2(20) NOT NULL,
+    last_name VARCHAR2(20),
+    date_of_birth DATE,
+    phone_number NUMBER(11),
+    address_id NUMBER(10));
+
+CREATE TABLE medical_facility(
+    facility_id NUMBER(10) PRIMARY KEY,
+    name VARCHAR2(50) NOT NULL,
+    capacity NUMBER(10),
+    classification NUMBER(1),
+    address_id NUMBER(10));
+
+CREATE TABLE address(
+    address_id NUMBER(10) PRIMARY KEY,
+    add_number NUMBER(10),
+    state VARCHAR2(50),
+    city VARCHAR2(50),
+    street_name VARCHAR2(50),
+    country VARCHAR2(50));
+
+CREATE TABLE certification(
+    acronym VARCHAR2(20) PRIMARY KEY,
+    name VARCHAR2(50),
+    certification_date DATE,
+    expiration_date DATE);
+
+CREATE TABLE facility_certification(acronym VARCHAR2(20) PRIMARY KEY, facility_id NUMBER(10) PRIMARY KEY);
+
+ALTER TABLE medical_facility ADD(CONSTRAINT medical_facility_classification CHECK(classification IN (1, 2, 3)));
+
+ALTER TABLE medical_facility ADD FOREIGN KEY(address_id) REFERENCES address(address_id);
+
+ALTER TABLE patient ADD FOREIGN KEY(address_id) REFERENCES address(address_id);
+
+ALTER TABLE facility_certification ADD FOREIGN KEY(facility_id) REFERENCES medical_facility(facility_id);
+
+ALTER TABLE facility_certification ADD FOREIGN KEY(acronym) REFERENCES certification(acronym);
+
+-- MANGAL
+-- auto increment
+
+CREATE TABLE service_department(
+    department_code VARCHAR2(5) PRIMARY KEY,
+    name VARCHAR2(50),
+    director_id NUMBER(10),
+    facility_id NUMBER(10)
+);
+
+ALTER TABLE service_department
+ADD CONSTRAINT FK_DepartmentDirector
+FOREIGN KEY(director_id) REFERENCES medical_staff(medical_staff_id)
+
+ALTER TABLE service_department
+ADD CONSTRAINT FK_DepartmentFacility
+FOREIGN KEY(facility_id) REFERENCES medical_facility(facility_id);
+
+CREATE TABLE department_speciality(
+    department_code VARCHAR2(5) PRIMARY KEY,
+    body_part_code VARCHAR2(20) PRIMARY KEY
+);
+
+
+ALTER TABLE department_speciality
+ADD CONSTRAINT FK_Department
+FOREIGN KEY (department_code) REFERENCES service_department(department_code);
+
+
+ALTER TABLE department_speciality
+ADD CONSTRAINT FK_BodyPartAssociation
+FOREIGN KEY (body_part_code) REFERENCES body_part(body_part_code);
+
+
+CREATE TABLE medical_service_department(
+    department_code VARCHAR2(5) PRIMARY KEY
+);
+
+
+ALTER TABLE medical_service_department
+ADD CONSTRAINT FK_MedServiceDepartment
+FOREIGN KEY(department_code) REFERENCES service_department(department_code);
+
+
+
+CREATE TABLE non_medical_service_department(
+    department_code VARCHAR2(5),
+    PRIMARY KEY department_code
+);
+
+
+ALTER TABLE non_medical_service_department
+ADD CONSTRAINT FK_NonMedServiceDepartment
+FOREIGN KEY(department_code) REFERENCES service_department(department_code);
+
+
+CREATE TABLE service(
+    service_code VARCHAR2(10) PRIMARY KEY,
+    name VARCHAR2(50),
+    equipment VARCHAR2(50),
+    facility_id NUMBER(10)
+);
+
+
+ALTER TABLE service
+ADD CONSTRAINT FK_ServiceFacility
+FOREIGN KEY(facility_id) REFERENCES medical_facility(facility_id);
+
+CREATE TABLE services_offered(
+    service_code VARCHAR2(10) PRIMARY KEY,
+    department_code VARCHAR2(5) PRIMARY KEY
+);
+
+ALTER TABLE services_offered
+ADD CONSTRAINT FK_ServicesOfferedServices
+FOREIGN KEY(service_code) REFERENCES service(service_code);
+
+
+ALTER TABLE services_offered
+ADD CONSTRAINT FK_ServicesOfferedDepartment
+FOREIGN KEY(department_code) REFERENCES service_department(department_code);
+
+CREATE TABLE staff(
+    staff_id NUMBER(10) PRIMARY KEY,
+    name VARCHAR2(50),
+    designation VARCHAR2(50),
+    hire_date DATE,
+    facility_id NUMBER(10),
+);
+
+
+ALTER TABLE staff
+ADD CONSTRAINT FK_StaffFacility
+FOREIGN KEY(facility_id) REFERENCES medical_facility(facility_id);
+
+CREATE TABLE medical_staff(
+    medical_staff_id NUMBER(10) PRIMARY KEY,
+    primary_department_code VARCHAR2(5)
+);
+
+
+ALTER TABLE medical_staff
+ADD CONSTRAINT FK_MedicalStaff
+FOREIGN KEY(medical_staff_id) REFERENCES staff(staff_id);
+
+ALTER TABLE medical_staff
+ADD CONSTRAINT FK_MedPrimaryDepartment
+FOREIGN KEY(primary_department_code) REFERENCES medical_service_department(department_code)
+
+
+CREATE TABLE non_medical_staff(
+    non_medical_staff_id NUMBER(10) PRIMARY KEY,
+    primary_department_code VARCHAR2(5)
+);
+
+ALTER TABLE non_medical_staff
+ADD CONSTRAINT FK_NonMedicalStaff
+FOREIGN KEY(non_medical_staff_id) REFERENCES staff(staff_id);
+
+ALTER TABLE non_medical_staff
+ADD CONSTRAINT FK_NonMedPrimaryDepartment
+FOREIGN KEY(primary_department_code) REFERENCES non_medical_service_department(department_code)
+
+
+CREATE TABLE secondary_medical_department(
+    medical_staff_id NUMBER(10) PRIMARY KEY,
+    medical_service_dept_code VARCHAR2(5) PRIMARY KEY
+);
+
+ALTER TABLE secondary_medical_department
+ADD CONSTRAINT FK_MedicalStaffSecondary
+FOREIGN KEY(medical_staff_id) REFERENCES medical_staff(medical_staff_id);
+
+ALTER TABLE secondary_medical_department
+ADD CONSTRAINT FK_MedicalDepartmentSecondary
+FOREIGN KEY(medical_service_department_code) REFERENCES medical_service_department(department_code);
+
+
+CREATE TABLE secondary_service_department(
+    non_medical_staff_id NUMBER(10),
+    department_code VARCHAR2(5),
+    PRIMARY KEY non_medical_staff_id, department_code,
+);
+
+ALTER TABLE secondary_service_department
+ADD CONSTRAINT FK_ServiceStaffSecondary
+FOREIGN KEY(non_medical_staff_id) REFERENCES non_medical_staff(non_medical_staff_id);
+
+ALTER TABLE secondary_service_department
+ADD CONSTRAINT FK_ServiceDepartmentSecondary
+FOREIGN KEY(department_code) REFERENCES service_department(department_code);
+
+-- GOD
+-- auto increment
+
+CREATE TABLE body_part(
+    body_part_code VARCHAR2(20) PRIMARY KEY,
+    name VARCHAR2(50)
+);
+
+CREATE TABLE check_in(
+    check_in_id VARCHAR2(10) PRIMARY KEY,
+    start_time TIMESTAMP,
+    end_time TIMESTAMP,
+    priority VARCHAR2(1),
+    patient_id NUMBER(10)
+);
+
+ALTER TABLE check_in
+ADD CONSTRAINT FK_CheckinPatient
+FOREIGN KEY(patient_id) REFERENCES Patient(patient_id);
+
+ALTER TABLE check_in ADD(CONSTRAINT check_in_priority CHECK(classification IN('H', 'N', 'Q')));
+
+CREATE TABLE symptom(
+    symptom_code VARCHAR2(20) PRIMARY KEY,
+    name VARCHAR2(50),
+    severity_scale_id NUMBER(10),
+    body_part_code VARCHAR2(20)
+);
+
+-- add constraint for SYM prefix
+
+ALTER TABLE symptom
+ADD CONSTRAINT FK_SymptomSSID
+FOREIGN KEY(severity_scale_id) REFERENCES severity_scale(severity_scale_id);
+
+ALTER TABLE symptom
+ADD CONSTRAINT FK_SymptomBodyPart
+FOREIGN KEY(body_part_code) REFERENCES body_part(body_part_code);
+
+CREATE TABLE symptom_metadata(
+    check_in_id VARCHAR2(20) PRIMARY KEY,
+    symptom_code VARCHAR2(20) PRIMARY KEY,
+    body_part_code VARCHAR2(20) PRIMARY KEY,
+    duration_days NUMBER(3),
+    severity_scale_value NUMBER(10),
+    first_occurrence NUMBER(1),
+    cause VARCHAR2(4000)
+);
+
+ALTER TABLE symptom_metadata ADD(CONSTRAINT symptom_metadata_first_occurence CHECK(first_occurrence IN(0, 1)));
+
+ALTER TABLE symptom_metadata
+ADD CONSTRAINT FK_SymptomMDCheckin
+FOREIGN KEY(check_in_id) REFERENCES check_in(check_in_id);
+
+ALTER TABLE symptom_metadata
+ADD CONSTRAINT FK_SymptomMDSymptom
+FOREIGN KEY(symptom_code) REFERENCES symptom(symptom_code);
+
+ALTER TABLE symptom_metadata
+ADD CONSTRAINT FK_SymptomBodyPart
+FOREIGN KEY(body_part_code) REFERENCES body_part(body_part_code);
+
+ALTER TABLE symptom_metadata
+ADD CONSTRAINT FK_SymptomSevValueScale
+FOREIGN KEY(severity_scale_value) REFERENCES severity_scale_value(severity_value_id);
+
+CREATE TABLE severity_scale(
+    severity_scale_id NUMBER(20) PRIMARY KEY,
+    name VARCHAR2(50)
+);
+
+CREATE TABLE severity_scale_value(
+    severity_value_id NUMBER(10) PRIMARY KEY,
+    scale_value VARCHAR2(50),
+    severity_scale_id NUMBER(10),
+    order NUMBER(10)
+);
+
+ALTER TABLE severity_scale_value
+ADD CONSTRAINT FK_SSVSevScale
+FOREIGN KEY(severity_scale_id) REFERENCES severity_scale(severity_scale_id);
+
+CREATE TABLE vital_signs(
+    temperature NUMBER(3),
+    systolic_pressure NUMBER(3),
+    diastolic_pressure NUMBER(3),
+    check_in_id NUMBER(10) PRIMARY KEY,
+    medical_staff_id NUMBER(10)
+);
+
+ALTER TABLE vital_signs
+ADD CONSTRAINT FK_VitalSignsCheckIn
+FOREIGN KEY(check_in_id) REFERENCES check_in(check_in_id);
+
+ALTER TABLE vital_signs
+ADD CONSTRAINT FK_VitalSignsMedStaff
+FOREIGN KEY(medical_staff_id) REFERENCES medical_Staff(medical_staff_id);
+
+-- ZACH
+
 CREATE TABLE rule(
-    rule_id NUMBER PRIMARY KEY,
+    rule_id NUMBER(10) PRIMARY KEY,
     priority CHAR(1),
 );
 
@@ -18,19 +316,20 @@ END;
 
 
 CREATE TABLE rule_symptom(
-    rule_symptom_id NUMBER PRIMARY KEY,
+    rule_symptom_id NUMBER(10) PRIMARY KEY,
     comparison_symbol CHAR(1),
-    symptom_code VARCHAR2(4000),
-    body_part_code VARCHAR2(4000),
-    scale_value_id NUMBER
+    symptom_code VARCHAR2(20),
+    body_part_code VARCHAR2(20),
+    scale_value_id NUMBER(10)
 );
 
+-- constraint for symbol
 
 CREATE SEQUENCE rule_symptom_sequence;
 
 
 CREATE OR REPLACE TRIGGER rule_symptom_on_insert
-  BEFORE INSERT ON rule
+  BEFORE INSERT ON rule_symptom
   FOR EACH ROW
 BEGIN
   SELECT rule_symptom_sequence.nextval
@@ -46,9 +345,8 @@ REFERENCES rule_symptom(scale_value_id);
 
 
 CREATE TABLE rule_consists(
-    rule_id NUMBER,
-    rule_symptom_id NUMBER,
-    PRIMARY KEY(rule_id, rule_symptom_id)
+    rule_id NUMBER(10) PRIMARY KEY,
+    rule_symptom_id NUMBER(10) PRIMARY KEY
 );
 
 
@@ -65,9 +363,9 @@ REFERENCES rule_symptom(rule_symptom_id);
 
 
 CREATE TABLE treatment(
-    check_in_id NUMBER PRIMARY KEY,
-    time DATE,
-    medical_staff_id NUMBER
+    check_in_id NUMBER(10) PRIMARY KEY,
+    treatment_time TIMESTAMP,
+    medical_staff_id NUMBER(10)
 );
 
 
@@ -78,16 +376,16 @@ REFERENCES medical_staff(medical_staff_id);
 
 
 CREATE TABLE outcome_report(
-    report_id NUMBER PRIMARY KEY,
+    report_id NUMBER(10) PRIMARY KEY,
     discharge_status CHAR(1) NOT NULL,
     treatment_description VARCHAR2(4000),
-    generation_time DATE,
-    patient_confirmation NUMBER,
-    referral_id NUMBER,
-    negative_exp_id NUMBER,
-    feedback_id NUMBER
+    generation_time TIMESTAMP,
+    patient_confirmation NUMBER(1),
+    referral_id NUMBER(10),
+    feedback_id NUMBER(10)
 );
 
+-- add constraint discharge status, confirmation
 
 CREATE SEQUENCE outcome_report_sequence;
 
@@ -107,12 +405,6 @@ ADD CONSTRAINT fk_outcome_report_referral_status
 FOREIGN KEY(referral_id)
 REFERENCES referral_status(referral_id);
 
---something wrong here
-ALTER TABLE outcome_report
-ADD CONSTRAINT fk_outcome_report_negative_experience
-FOREIGN KEY(negative_exp_id)
-REFERENCES negative_experience(report_id);
-
 
 ALTER TABLE outcome_report
 ADD CONSTRAINT fk_outcome_report_feedback
@@ -121,7 +413,7 @@ REFERENCES feedback(feedback_id);
 
 
 CREATE TABLE feedback(
-    feedback_id NUMBER PRIMARY KEY,
+    feedback_id NUMBER(10) PRIMARY KEY,
     description VARCHAR2(4000)
 );
 
@@ -140,9 +432,9 @@ END;
 
 
 CREATE TABLE referral_status(
-    referral_id NUMBER PRIMARY KEY,
-    facility_id NUMBER,
-    medical_staff_id NUMBER
+    referral_id NUMBER(10) PRIMARY KEY,
+    facility_id NUMBER(10),
+    medical_staff_id NUMBER(10)
 );
 
 
@@ -172,12 +464,13 @@ REFERENCES medical_staff(medical_staff_id);
 
 
 CREATE TABLE referral_reason(
-    referral_reason_id NUMBER PRIMARY KEY,
-    reason_code NUMBER,
+    referral_reason_id NUMBER(10) PRIMARY KEY,
+    reason_code NUMBER(1),
     description VARCHAR2(4000),
-    referral_id NUMBER
+    referral_id NUMBER(10)
 );
 
+-- add constraint reason code
 
 CREATE SEQUENCE referral_reason_sequence;
 
@@ -199,11 +492,12 @@ REFERENCES referral_status(referral_id);
 
 
 CREATE TABLE negative_experience(
-    report_id NUMBER PRIMARY KEY,
-    experience_code NUMBER,
+    report_id NUMBER(10) PRIMARY KEY,
+    experience_code NUMBER(1),
     description VARCHAR2(4000)
 );
 
+-- constraint for experience code
 
 ALTER TABLE negative_experience
 ADD CONSTRAINT fk_negative_experience_outcome_report
