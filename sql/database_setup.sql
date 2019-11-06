@@ -43,6 +43,39 @@ ALTER TABLE facility_certification ADD FOREIGN KEY(facility_id) REFERENCES medic
 
 ALTER TABLE facility_certification ADD FOREIGN KEY(acronym) REFERENCES certification(acronym);
 
+CREATE SEQUENCE patient_seq;
+
+CREATE OR REPLACE TRIGGER patient_trigger
+  BEFORE INSERT ON patient
+  FOR EACH ROW
+BEGIN
+  SELECT patient_seq.nextval
+    INTO :new.patient_id
+    FROM dual;
+END;
+
+CREATE SEQUENCE medical_facility_seq;
+
+CREATE OR REPLACE TRIGGER medical_facility_trigger
+  BEFORE INSERT ON medical_facility
+  FOR EACH ROW
+BEGIN
+  SELECT medical_facility_seq.nextval
+    INTO :new.facility_id
+    FROM dual;
+END;
+
+CREATE SEQUENCE address_seq;
+
+CREATE OR REPLACE TRIGGER address_trigger
+  BEFORE INSERT ON address
+  FOR EACH ROW
+BEGIN
+  SELECT address_seq.nextval
+    INTO :new.address_id
+    FROM dual;
+END;
+
 -- MANGAL
 -- auto increment
 
