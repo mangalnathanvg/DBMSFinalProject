@@ -166,6 +166,16 @@ CREATE TABLE staff(
     facility_id NUMBER(10),
 );
 
+CREATE SEQUENCE staff_seq;
+
+CREATE OR REPLACE TRIGGER staff_id_trigger
+  BEFORE INSERT ON staff
+  FOR EACH ROW
+BEGIN
+  SELECT staff_seq.nextval
+    INTO :new.staff_id
+    FROM dual;
+END;
 
 ALTER TABLE staff
 ADD CONSTRAINT FK_StaffFacility
