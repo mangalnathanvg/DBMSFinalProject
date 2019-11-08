@@ -336,6 +336,37 @@ FOREIGN KEY(check_in_id) REFERENCES check_in(check_in_id);
 ALTER TABLE vital_signs
 ADD CONSTRAINT FK_VitalSignsMedStaff
 FOREIGN KEY(medical_staff_id) REFERENCES medical_Staff(medical_staff_id);
+                                                                                                       
+CREATE SEQUENCE check_in_id_sequence;
+
+CREATE OR REPLACE TRIGGER check_in_on_insert
+  BEFORE INSERT ON check_in
+  FOR EACH ROW
+BEGIN
+  SELECT check_in_id_sequence.nextval
+    INTO :new.check_in_id
+    FROM dual;
+END;
+
+CREATE SEQUENCE severity_scale_id_sequence;
+
+CREATE OR REPLACE TRIGGER severity_scale_on_insert
+  BEFORE INSERT ON severity_scale
+  FOR EACH ROW
+BEGIN
+  SELECT severity_scale_id_sequence.nextval
+  INTO :new.severity_scale_id
+  FROM dual;
+END;
+
+CREATE SEQUENCE severity_value_id_sequence;
+
+CREATE OR REPLACE TRIGGER severity_scale_value_on_insert
+  BEFORE INSERT ON severity_scale_value
+  FOR EACH ROW
+BEGIN
+  SELECT severity_value_id_sequence.nextval
+  INTO :new.severity_value_id
 
 -- ZACH
 
