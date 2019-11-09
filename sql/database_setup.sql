@@ -101,7 +101,7 @@ CREATE TABLE check_in(
     check_in_id VARCHAR2(10) PRIMARY KEY,
     start_time TIMESTAMP,
     end_time TIMESTAMP,
-    priority VARCHAR2(1),
+    priority char(1),
     patient_id NUMBER(10)
 );
 
@@ -384,7 +384,6 @@ ADD CONSTRAINT FK_SymptomBodyPart
 FOREIGN KEY(body_part_code) REFERENCES body_part(body_part_code);
 
 
-
 ALTER TABLE symptom_metadata ADD(CONSTRAINT symptom_metadata_first_occurence CHECK(first_occurrence IN(0, 1)));
 
 ALTER TABLE symptom_metadata
@@ -404,11 +403,9 @@ ADD CONSTRAINT FK_SymptomSevValueScale
 FOREIGN KEY(severity_scale_value) REFERENCES severity_scale_value(severity_value_id);
 
 
-
 ALTER TABLE severity_scale_value
 ADD CONSTRAINT FK_SSVSevScale
 FOREIGN KEY(severity_scale_id) REFERENCES severity_scale(severity_scale_id);
-
 
 
 ALTER TABLE vital_signs
