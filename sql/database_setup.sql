@@ -98,7 +98,7 @@ CREATE TABLE body_part(
 );
 
 CREATE TABLE check_in(
-    check_in_id VARCHAR2(10) PRIMARY KEY,
+    check_in_id NUMBER(10) PRIMARY KEY,
     start_time TIMESTAMP,
     end_time TIMESTAMP,
     priority VARCHAR2(1),
