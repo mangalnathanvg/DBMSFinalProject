@@ -1,7 +1,4 @@
 --DEEPALI
-
---add triggers
-
 CREATE TABLE patient(
     patient_id NUMBER(10) PRIMARY KEY,
     first_name VARCHAR2(20) NOT NULL,
@@ -32,8 +29,9 @@ CREATE TABLE certification(
     expiration_date DATE);
 
 CREATE TABLE facility_certification(
-    acronym VARCHAR2(20) PRIMARY KEY, 
-    facility_id NUMBER(10) PRIMARY KEY);
+    acronym VARCHAR2(20),
+    facility_id NUMBER(10),
+    PRIMARY KEY(acronym, facility_id));
 
 CREATE TABLE service_department(
     department_code VARCHAR2(5) PRIMARY KEY,
@@ -43,8 +41,9 @@ CREATE TABLE service_department(
 );
 
 CREATE TABLE department_speciality(
-    department_code VARCHAR2(5) PRIMARY KEY,
-    body_part_code VARCHAR2(20) PRIMARY KEY
+    department_code VARCHAR2(5),
+    body_part_code VARCHAR2(20),
+    PRIMARY KEY(department_code, body_part_code)
 );
 
 CREATE TABLE service(
@@ -59,8 +58,7 @@ CREATE TABLE medical_service_department(
 );
 
 CREATE TABLE non_medical_service_department(
-    department_code VARCHAR2(5),
-    PRIMARY KEY department_code
+    department_code VARCHAR2(5) PRIMARY KEY
 );
 
 CREATE TABLE services_offered(
@@ -74,7 +72,7 @@ CREATE TABLE staff(
     name VARCHAR2(50),
     designation VARCHAR2(50),
     hire_date DATE,
-    facility_id NUMBER(10),
+    facility_id NUMBER(10)
 );
 
 CREATE TABLE non_medical_staff(
@@ -83,14 +81,15 @@ CREATE TABLE non_medical_staff(
 );
 
 CREATE TABLE secondary_medical_department(
-    medical_staff_id NUMBER(10) PRIMARY KEY,
-    medical_service_dept_code VARCHAR2(5) PRIMARY KEY
+    medical_staff_id NUMBER(10),
+    medical_service_dept_code VARCHAR2(5),
+    PRIMARY KEY(medical_staff_id, medical_service_dept_code)
 );
 
 CREATE TABLE secondary_service_department(
     non_medical_staff_id NUMBER(10),
     department_code VARCHAR2(5),
-    PRIMARY KEY non_medical_staff_id, department_code,
+    PRIMARY KEY (non_medical_staff_id, department_code)
 );
 
 CREATE TABLE body_part(
@@ -120,13 +119,14 @@ CREATE TABLE medical_staff(
 );
 
 CREATE TABLE symptom_metadata(
-    check_in_id VARCHAR2(20) PRIMARY KEY,
-    symptom_code VARCHAR2(20) PRIMARY KEY,
-    body_part_code VARCHAR2(20) PRIMARY KEY,
+    check_in_id VARCHAR2(20),
+    symptom_code VARCHAR2(20),
+    body_part_code VARCHAR2(20),
     duration_days NUMBER(3),
     severity_scale_value NUMBER(10),
     first_occurrence NUMBER(1),
-    cause VARCHAR2(4000)
+    cause VARCHAR2(4000),
+    PRIMARY KEY(check_in_id, symptom_code, body_part_code)
 );
 
 CREATE TABLE severity_scale(
@@ -151,7 +151,7 @@ CREATE TABLE vital_signs(
 
 CREATE TABLE rule(
     rule_id NUMBER(10) PRIMARY KEY,
-    priority CHAR(1),
+    priority CHAR(1)
 );
 
 CREATE TABLE rule_symptom(
@@ -163,8 +163,9 @@ CREATE TABLE rule_symptom(
 );
 
 CREATE TABLE rule_consists(
-    rule_id NUMBER(10) PRIMARY KEY,
-    rule_symptom_id NUMBER(10) PRIMARY KEY
+    rule_id NUMBER(10),
+    rule_symptom_id NUMBER(10),
+    PRIMARY KEY(rule_id, rule_symptom_id)
 );
 
 CREATE TABLE treatment(
@@ -449,11 +450,6 @@ BEGIN
 SELECT severity_value_id_sequence.nextval
 INTO: new.severity_value_id
 
-    --ZACH
-
-
-
-
 CREATE SEQUENCE rule_sequence;
 
 
@@ -466,10 +462,7 @@ INTO: new.rule_id
 FROM dual;
 END;
 
-
-
---constraint
-for symbol
+--constraint for symbol
 
 CREATE SEQUENCE rule_symptom_sequence;
 
@@ -543,9 +536,6 @@ FOREIGN KEY(feedback_id)
 REFERENCES feedback(feedback_id);
 
 
-
-
-
 CREATE SEQUENCE feedback_sequence;
 
 
@@ -557,8 +547,6 @@ SELECT feedback_sequence.nextval
 INTO: new.feedback_id
 FROM dual;
 END;
-
-
 
 
 CREATE SEQUENCE referral_status_sequence;
