@@ -377,7 +377,7 @@ ALTER TABLE check_in
 ADD CONSTRAINT FK_Checkinfacility
 FOREIGN KEY(facility_id) REFERENCES medical_facility(facility_id);
 
-ALTER TABLE check_in ADD(CONSTRAINT check_in_priority CHECK(classification IN('H', 'N', 'Q')));
+ALTER TABLE check_in ADD(CONSTRAINT check_in_priority CHECK(priority IN('H', 'N', 'Q')));
 
 --add constraint
 for SYM prefix
