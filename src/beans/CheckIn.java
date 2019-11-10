@@ -6,6 +6,7 @@ public class CheckIn {
 	private java.sql.Timestamp endTime;
 	private char priority;
 	private int patientID;
+	private int facilityId;
 
 	public int getCheckInID() {
 		return checkInID;
@@ -36,6 +37,12 @@ public class CheckIn {
 	}
 	public void setPatientID(int patientID) {
 		this.patientID = patientID;
+	}
+	public int getFacilityId() {
+		return facilityId;
+	}
+	public void setFacilityId(int facilityId) {
+		this.facilityId = facilityId;
 	}
 	
 }

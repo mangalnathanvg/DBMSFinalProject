@@ -6,6 +6,7 @@ public class Staff {
 	private String name;
 	private String designation;
 	private Date hireDate;
+	private Date dateOfBirth;
 	
 	public int getStaff_id() {
 		return staff_id;
@@ -30,6 +31,12 @@ public class Staff {
 	}
 	public void setHireDate(Date hireDate) {
 		this.hireDate = hireDate;
+	}
+	public Date getDateOfBirth() {
+		return dateOfBirth;
+	}
+	public void setDateOfBirth(Date dateOfBirth) {
+		this.dateOfBirth = dateOfBirth;
 	}
 	
 	

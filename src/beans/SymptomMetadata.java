@@ -8,6 +8,7 @@ public class SymptomMetadata {
 	private int severityScaleValue;
 	private int firstOccurrence;
 	private String cause;
+	private String description;
 	
 	public int getCheckInID() {
 		return checkInID;
@@ -63,5 +64,13 @@ public class SymptomMetadata {
 	
 	public void setCause(String cause) {
 		this.cause = cause;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}	
 }

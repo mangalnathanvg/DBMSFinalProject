@@ -72,6 +72,7 @@ CREATE TABLE staff(
     name VARCHAR2(50),
     designation VARCHAR2(50),
     hire_date DATE,
+    date_of_birth DATE,
     facility_id NUMBER(10)
 );
 
@@ -102,7 +103,8 @@ CREATE TABLE check_in(
     start_time TIMESTAMP,
     end_time TIMESTAMP,
     priority char(1),
-    patient_id NUMBER(10)
+    patient_id NUMBER(10),
+    facility_id NUMBER(10)
 );
 
 
@@ -126,6 +128,7 @@ CREATE TABLE symptom_metadata(
     severity_scale_value NUMBER(10),
     first_occurrence NUMBER(1),
     cause VARCHAR2(4000),
+    description VARCHAR2(4000),
     PRIMARY KEY(check_in_id, symptom_code, body_part_code)
 );
 
@@ -369,6 +372,10 @@ FOREIGN KEY(department_code) REFERENCES service_department(department_code);
 ALTER TABLE check_in
 ADD CONSTRAINT FK_CheckinPatient
 FOREIGN KEY(patient_id) REFERENCES Patient(patient_id);
+
+ALTER TABLE check_in
+ADD CONSTRAINT FK_Checkinfacility
+FOREIGN KEY(facility_id) REFERENCES medical_facility(facility_id);
 
 ALTER TABLE check_in ADD(CONSTRAINT check_in_priority CHECK(classification IN('H', 'N', 'Q')));
 
