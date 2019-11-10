@@ -484,7 +484,7 @@ END;
 ALTER TABLE rule_symptom
 ADD CONSTRAINT fk_rule_symptom_scale_value
 FOREIGN KEY(scale_value_id)
-REFERENCES rule_symptom(scale_value_id);
+REFERENCES severity_scale_value(severity_value_id);
 
 
 
@@ -512,9 +512,6 @@ REFERENCES medical_staff(medical_staff_id);
 
 
 
-
---add constraint discharge status, confirmation
-
 CREATE SEQUENCE outcome_report_sequence;
 
 
@@ -526,6 +523,10 @@ SELECT outcome_report_sequence.nextval
 INTO: new.report_id
 FROM dual;
 END;
+                                                                                                       
+ALTER TABLE outcome_report ADD(CONSTRAINT outcome_rpt_discharge CHECK(discharge_status IN('T', 'D', 'R')));
+
+ALTER TABLE outcome_report ADD(CONSTRAINT outcome_rpt_confirmation CHECK(patient_confirmation IN(1,0)));
 
 
 ALTER TABLE outcome_report
@@ -577,7 +578,7 @@ ADD CONSTRAINT fk_referral_status_medical_staff
 FOREIGN KEY(medical_staff_id)
 REFERENCES medical_staff(medical_staff_id);
 
---add constraint reason code
+ALTER TABLE referral_reason ADD(CONSTRAINT referral_reason_code CHECK(reason_code IN(1,2,3)));
 
 CREATE SEQUENCE referral_reason_sequence;
 
@@ -597,7 +598,7 @@ ADD CONSTRAINT fk_referral_reason_referral_status
 FOREIGN KEY(referral_id)
 REFERENCES referral_status(referral_id);
 
---constraint for experience code
+ALTER TABLE negative_experience ADD(CONSTRAINT negative_experience_code CHECK(experience_code IN(1,2)));
 
 ALTER TABLE negative_experience
 ADD CONSTRAINT fk_negative_experience_outcome_report
