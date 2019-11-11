@@ -7,7 +7,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 
 import beans.BodyPart;
 import beans.MedicalFacility;
@@ -28,6 +32,9 @@ public class Application {
 	static Patient checkedInPatient = null;
 	static Staff checkedInStaff = null;
 
+	//static ArrayList<BodyPart> bodyPartsMasterList = new ArrayList<BodyPart>();
+	//static ArrayList<SeverityScale> severityScaleMasterList = new ArrayList<SeverityScale>();
+	
 	static HashMap<String, BodyPart> bodyParts = new HashMap<String, BodyPart>();
 	static HashMap<String, Symptom> symptoms = new HashMap<String, Symptom>();
 	static HashMap<Integer, SeverityScale> severityScales = new HashMap<Integer, SeverityScale>();
@@ -167,7 +174,8 @@ public class Application {
 			sb.append("1. Sign-in\n");
 			sb.append("2. Sign-up (patient)\n");
 			sb.append("3. Demo queries\n");
-			sb.append("4. Exit");
+			sb.append("4. Exit\n");
+			sb.append("5. Add Symptoms\n");
 			System.out.println(sb.toString());
 
 			choice = Integer.parseInt(br.readLine());
@@ -177,6 +185,8 @@ public class Application {
 				displaySignUp();
 			} else if (choice == 3) {
 				displayDemoQueries();
+			} else if (choice == 5) {
+				addSymptoms();
 			}
 		}
 
@@ -271,5 +281,111 @@ public class Application {
 
 	private static void displayPatientRouting() {
 		System.out.println("Logged in");
+	}
+	
+	private static void addSymptoms() throws Exception {
+		//Adding boy parts in master list.
+//		BodyPart b1 = new BodyPart();
+//		BodyPart b2 = new BodyPart();
+//		BodyPart b3 = new BodyPart();
+//		
+//		b1.setBodyPartCode("BR001");
+//		b1.setName("Brain");
+//		
+//		b2.setBodyPartCode("BR002");
+//		b2.setName("Heart");
+//		
+//		b3.setBodyPartCode("BR003");
+//		b3.setName("Lungs");
+//		
+//		bodyPartsMasterList.add(b1);
+//		bodyPartsMasterList.add(b2);
+//		bodyPartsMasterList.add(b3);
+//		
+//		SeverityScale s1 = new SeverityScale();
+//		SeverityScale s2 = new SeverityScale();
+//		SeverityScale s3 = new SeverityScale();
+//		
+//		s1.setSeverityScaleId(1400);
+//		s1.setName("Pain Scale 1 to 10");
+//		
+//		s2.setSeverityScaleId(14001);
+//		s2.setName("Bleeding Heavy Normal or Light");
+//		
+//		s3.setSeverityScaleId(14002);
+//		s3.setName("Wellness 1 to 5");
+//		
+//		severityScaleMasterList.add(s1);
+//		severityScaleMasterList.add(s2);
+//		severityScaleMasterList.add(s3);
+		
+		int choice, severityID;
+		String symptomName, bodyPartAssocCode, temp;
+		System.out.println("Please enter the details as prompted");
+		System.out.println("\n Symptom Name: ");
+		symptomName = br.readLine();
+		System.out.println("\n Body Part associated (Select option and press enter or press enter to leave blank): ");
+		int i=1;
+		ArrayList<String> bpoptions = new ArrayList<String>();
+		for(String bpcode: bodyParts.keySet()) {
+			bpoptions.add(bpcode);
+			String value = bodyParts.get(bpcode).getName().toString();
+			System.out.println(Integer.toString(i) + ") " + bpcode + " - " + value);
+			i++;
+		}
+		
+		temp = br.readLine();
+		
+		if(temp!="") {
+			choice = Integer.parseInt(temp);
+			bodyPartAssocCode = bodyParts.get(bpoptions.get(choice-1)).getName().toString();
+		}else {
+			bodyPartAssocCode = "No Specific Body Part";
+		}
+		
+		System.out.println("Choose the severity scale below (Press Enter if you want to leave it blank)");
+		
+		i=1;
+		ArrayList<Integer> svcoptions = new ArrayList<Integer>();
+		for(int sv: severityScales.keySet()) {
+			svcoptions.add(sv);
+			String value = severityScales.get(sv).getName().toString();
+			System.out.println(Integer.toString(i)+ ") " + sv + " - " + value);
+			i++;
+		}
+		temp = br.readLine();
+		
+		if(temp!="") {
+			choice = Integer.parseInt(temp);
+			severityID = svcoptions.get(choice-1);
+		}else {
+			severityID = 0;
+		}
+		
+		// SymptomName , BodyPartAssocCode and SeverityID is associated successfully
+		System.out.println("1) Record");
+		System.out.println("2) Go Back");
+		System.out.print("\nChoice: ");
+		choice = Integer.parseInt(br.readLine());
+		if(choice==1) {
+			
+			PreparedStatement ps = null;
+			String sql;
+			sql = "INSERT INTO mvg_symptomtable values ( ? , ? , ? )";
+			ps = conn.prepareStatement(sql);
+			ps.setString(1, symptomName);
+			ps.setString(2, Integer.toString(severityID));
+			ps.setString(3, bodyPartAssocCode);
+			ResultSet rs = ps.executeQuery();
+			if(rs!=null) {
+				System.out.println("Recorded Symptoms Successfully");
+			}else {
+				System.out.println("Unable to record symptoms");
+			}
+			
+		}	
+	}
+	private static void addSeverityScale() {
+		
 	}
 }
