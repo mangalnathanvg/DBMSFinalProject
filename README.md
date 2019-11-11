@@ -5,5 +5,5 @@ Team Members:
 1) Deepali Bharmal
 2) Devi Krishnan
 3) Mangalnathan Vijayagopal
-4) Zacharaiah Mathews
+4) Zachariah Mathews
 
