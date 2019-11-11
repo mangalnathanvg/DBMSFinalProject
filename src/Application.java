@@ -31,9 +31,6 @@ public class Application {
 
 	static Patient checkedInPatient = null;
 	static Staff checkedInStaff = null;
-
-	//static ArrayList<BodyPart> bodyPartsMasterList = new ArrayList<BodyPart>();
-	//static ArrayList<SeverityScale> severityScaleMasterList = new ArrayList<SeverityScale>();
 	
 	static HashMap<String, BodyPart> bodyParts = new HashMap<String, BodyPart>();
 	static HashMap<String, Symptom> symptoms = new HashMap<String, Symptom>();
@@ -284,41 +281,7 @@ public class Application {
 	}
 	
 	private static void addSymptoms() throws Exception {
-		//Adding boy parts in master list.
-//		BodyPart b1 = new BodyPart();
-//		BodyPart b2 = new BodyPart();
-//		BodyPart b3 = new BodyPart();
-//		
-//		b1.setBodyPartCode("BR001");
-//		b1.setName("Brain");
-//		
-//		b2.setBodyPartCode("BR002");
-//		b2.setName("Heart");
-//		
-//		b3.setBodyPartCode("BR003");
-//		b3.setName("Lungs");
-//		
-//		bodyPartsMasterList.add(b1);
-//		bodyPartsMasterList.add(b2);
-//		bodyPartsMasterList.add(b3);
-//		
-//		SeverityScale s1 = new SeverityScale();
-//		SeverityScale s2 = new SeverityScale();
-//		SeverityScale s3 = new SeverityScale();
-//		
-//		s1.setSeverityScaleId(1400);
-//		s1.setName("Pain Scale 1 to 10");
-//		
-//		s2.setSeverityScaleId(14001);
-//		s2.setName("Bleeding Heavy Normal or Light");
-//		
-//		s3.setSeverityScaleId(14002);
-//		s3.setName("Wellness 1 to 5");
-//		
-//		severityScaleMasterList.add(s1);
-//		severityScaleMasterList.add(s2);
-//		severityScaleMasterList.add(s3);
-		
+	
 		int choice, severityID;
 		String symptomName, bodyPartAssocCode, temp;
 		System.out.println("Please enter the details as prompted");
