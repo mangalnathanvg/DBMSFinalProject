@@ -72,6 +72,7 @@ CREATE TABLE staff(
     name VARCHAR2(50),
     designation VARCHAR2(50),
     hire_date DATE,
+    date_of_birth DATE,
     facility_id NUMBER(10)
 );
 
@@ -101,8 +102,9 @@ CREATE TABLE check_in(
     check_in_id NUMBER(10) PRIMARY KEY,
     start_time TIMESTAMP,
     end_time TIMESTAMP,
-    priority VARCHAR2(1),
-    patient_id NUMBER(10)
+    priority char(1),
+    patient_id NUMBER(10),
+    facility_id NUMBER(10)
 );
 
 
@@ -126,6 +128,7 @@ CREATE TABLE symptom_metadata(
     severity_scale_value NUMBER(10),
     first_occurrence NUMBER(1),
     cause VARCHAR2(4000),
+    description VARCHAR2(4000),
     PRIMARY KEY(check_in_id, symptom_code, body_part_code)
 );
 
@@ -370,7 +373,11 @@ ALTER TABLE check_in
 ADD CONSTRAINT FK_CheckinPatient
 FOREIGN KEY(patient_id) REFERENCES Patient(patient_id);
 
-ALTER TABLE check_in ADD(CONSTRAINT check_in_priority CHECK(classification IN('H', 'N', 'Q')));
+ALTER TABLE check_in
+ADD CONSTRAINT FK_Checkinfacility
+FOREIGN KEY(facility_id) REFERENCES medical_facility(facility_id);
+
+ALTER TABLE check_in ADD(CONSTRAINT check_in_priority CHECK(priority IN('H', 'N', 'Q')));
 
 --add constraint
 for SYM prefix
@@ -382,7 +389,6 @@ FOREIGN KEY(severity_scale_id) REFERENCES severity_scale(severity_scale_id);
 ALTER TABLE symptom
 ADD CONSTRAINT FK_SymptomBodyPart
 FOREIGN KEY(body_part_code) REFERENCES body_part(body_part_code);
-
 
 
 ALTER TABLE symptom_metadata ADD(CONSTRAINT symptom_metadata_first_occurence CHECK(first_occurrence IN(0, 1)));
@@ -404,11 +410,9 @@ ADD CONSTRAINT FK_SymptomSevValueScale
 FOREIGN KEY(severity_scale_value) REFERENCES severity_scale_value(severity_value_id);
 
 
-
 ALTER TABLE severity_scale_value
 ADD CONSTRAINT FK_SSVSevScale
 FOREIGN KEY(severity_scale_id) REFERENCES severity_scale(severity_scale_id);
-
 
 
 ALTER TABLE vital_signs
@@ -480,7 +484,7 @@ END;
 ALTER TABLE rule_symptom
 ADD CONSTRAINT fk_rule_symptom_scale_value
 FOREIGN KEY(scale_value_id)
-REFERENCES rule_symptom(scale_value_id);
+REFERENCES severity_scale_value(severity_value_id);
 
 
 
@@ -508,9 +512,6 @@ REFERENCES medical_staff(medical_staff_id);
 
 
 
-
---add constraint discharge status, confirmation
-
 CREATE SEQUENCE outcome_report_sequence;
 
 
@@ -522,6 +523,10 @@ SELECT outcome_report_sequence.nextval
 INTO: new.report_id
 FROM dual;
 END;
+                                                                                                       
+ALTER TABLE outcome_report ADD(CONSTRAINT outcome_rpt_discharge CHECK(discharge_status IN('T', 'D', 'R')));
+
+ALTER TABLE outcome_report ADD(CONSTRAINT outcome_rpt_confirmation CHECK(patient_confirmation IN(1,0)));
 
 
 ALTER TABLE outcome_report
@@ -573,7 +578,7 @@ ADD CONSTRAINT fk_referral_status_medical_staff
 FOREIGN KEY(medical_staff_id)
 REFERENCES medical_staff(medical_staff_id);
 
---add constraint reason code
+ALTER TABLE referral_reason ADD(CONSTRAINT referral_reason_code CHECK(reason_code IN(1,2,3)));
 
 CREATE SEQUENCE referral_reason_sequence;
 
@@ -593,7 +598,7 @@ ADD CONSTRAINT fk_referral_reason_referral_status
 FOREIGN KEY(referral_id)
 REFERENCES referral_status(referral_id);
 
---constraint for experience code
+ALTER TABLE negative_experience ADD(CONSTRAINT negative_experience_code CHECK(experience_code IN(1,2)));
 
 ALTER TABLE negative_experience
 ADD CONSTRAINT fk_negative_experience_outcome_report

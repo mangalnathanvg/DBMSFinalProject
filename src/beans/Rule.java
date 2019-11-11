@@ -1,8 +1,8 @@
 package beans;
 
 public class Rule {
-	public int ruleId;
-	public char priority;
+	private int ruleId;
+	private char priority;
 
 	public int getRuleId() {
 		return ruleId;
