@@ -1,6 +1,7 @@
 package beans;
 
 public class Rule {
+
 	private int ruleId;
 	private char priority;
 

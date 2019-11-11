@@ -1,10 +1,14 @@
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+
+import beans.Patient;
+import beans.Staff;
 
 public class Application {
 
@@ -12,6 +16,9 @@ public class Application {
 	static final BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
 	static Connection conn = null;
+
+	static Patient checkedInPatient = null;
+	static Staff checkedInStaff = null;
 
 	public static void main(String[] args) {
 
@@ -49,7 +56,8 @@ public class Application {
 			stmt.close();
 			conn.close();
 		} catch (Exception e) {
-			System.out.println("Error occured: " + e);
+//			System.out.println("Error occured: " + e);
+			e.printStackTrace();
 		} finally {
 
 		}
@@ -90,56 +98,73 @@ public class Application {
 	private static void displaySignIn() throws Exception {
 		int choice = 0;
 		StringBuilder sb = null;
-		PreparedStatement ps = null;
-		String sql;
 
 		while (choice != 2) {
+
+			String facilityId, dob, city = null, lname = null, patient;
+			System.out.println("\nPlease enter the following information:\nFacility ID");
+			facilityId = br.readLine();
+			System.out.println("Patient? (y/n)");
+			patient = br.readLine();
+			boolean isPatient = patient.equalsIgnoreCase("y");
+			if (isPatient) {
+				System.out.println("Last Name");
+			} else {
+				System.out.println("Name");
+			}
+			lname = br.readLine();
+			System.out.println("Date of birth (YYYY-MM-DD)");
+			dob = br.readLine();
+			System.out.println("City of address");
+			city = br.readLine();
+
+			Date dateOfBirth = Date.valueOf(dob);
+
+			System.out.println("\nPlease choose from the below options:");
 			sb = new StringBuilder();
-			sb.append("\n1. Sign-in\n");
-			sb.append("2. Go back");
+			sb.append("1. Sign-in\n");
+			sb.append("2. Go back\n");
 			System.out.println(sb.toString());
 
 			choice = Integer.parseInt(br.readLine());
 			if (choice == 1) {
-				String facilityId, dob, city, lname, patient;
-				System.out.println("\nPlease enter the following information:\nFacility ID");
-				facilityId = br.readLine();
-				System.out.println("Last Name");
-				lname = br.readLine();
-				System.out.println("Date of birth");
-				dob = br.readLine();
-				System.out.println("City of address");
-				city = br.readLine();
-				System.out.println("Patient? (y/n)");
-				patient = br.readLine();
-
-				boolean isPatient = patient.equalsIgnoreCase("y");
 				if (isPatient) {
-					// not the right query
-					sql = "SELECT * FROM patient p INNER JOIN address a ON p.address_id = a.address_id WHERE p.last_name = ? AND p.date_of_birth = ? AND a.city = ?";
-					ps = conn.prepareStatement(sql);
-					ps.setString(1, lname);
-					ps.setString(2, dob);
-					ps.setString(3, city);
-				} else {
-					// handle for staff
-				}
-
-				ResultSet rs = ps.executeQuery();
-				if (rs.next()) {
-					// set global variable patient/staff or pass in the object (to set context)
-					if (isPatient) {
+					checkedInPatient = loadPatient(lname, dateOfBirth, city);
+					if (checkedInPatient != null) {
 						displayPatientRouting();
-					} else {
-						// need to check if medical staff
-						displayStaffMenu();
 					}
 				} else {
-					System.out.println("Sign-in incorrect");
+					checkedInStaff = loadStaff(lname, dateOfBirth, city);
+					displayStaffMenu();
 				}
-
 			}
+			if (checkedInPatient == null && checkedInStaff == null) {
+				System.out.println("Sign-in incorrect\n");
+			} else {
+				break;
+			}
+
 		}
+	}
+
+	private static Staff loadStaff(String lname, Date dateOfBirth, String city) {
+		return null;
+	}
+
+	private static Patient loadPatient(String lname, Date dateOfBirth, String city) throws Exception {
+		Patient patient = null;
+		String sql = "SELECT * FROM patient p INNER JOIN address a ON p.address_id = a.address_id "
+				+ "WHERE upper(p.last_name) = upper(?) AND upper(a.city) = upper(?) AND to_char(p.date_of_birth, 'YYYY-MM-DD') = ?";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setString(1, lname);
+		ps.setString(2, city);
+		ps.setString(3, dateOfBirth.toString());
+		ResultSet rs = ps.executeQuery();
+		if (rs.next()) {
+			patient = new Patient();
+			patient.load(rs);
+		}
+		return patient;
 	}
 
 	private static void displayStaffMenu() {
@@ -148,7 +173,6 @@ public class Application {
 	}
 
 	private static void displayPatientRouting() {
-		// TODO Auto-generated method stub
-
+		System.out.println("Logged in");
 	}
 }

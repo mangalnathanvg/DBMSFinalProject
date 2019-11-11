@@ -1,6 +1,7 @@
 package beans;
 
-public class MedicalServiceDepartment {
+public class MedicalServiceDepartment extends ServiceDepartment {
+
 	private String departmentCode;
 
 	public String getDepartmentCode() {
@@ -10,5 +11,5 @@ public class MedicalServiceDepartment {
 	public void setDepartmentCode(String departmentCode) {
 		this.departmentCode = departmentCode;
 	}
-	
+
 }
