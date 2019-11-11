@@ -10,6 +10,7 @@ public class Patient {
 	private String lastName;
 	private java.sql.Date dateOfBirth;
 	private long phoneNumber;
+
 	private Address address;
 
 	public int getPatientId() {

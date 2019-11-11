@@ -10,6 +10,7 @@ import java.sql.Statement;
 import java.util.HashMap;
 
 import beans.BodyPart;
+import beans.MedicalFacility;
 import beans.Patient;
 import beans.Rule;
 import beans.SeverityScale;
@@ -32,6 +33,7 @@ public class Application {
 	static HashMap<Integer, SeverityScale> severityScales = new HashMap<Integer, SeverityScale>();
 	static HashMap<Integer, SeverityScaleValue> severityScaleValues = new HashMap<Integer, SeverityScaleValue>();
 	static HashMap<Integer, Rule> rules = new HashMap<Integer, Rule>();
+	static HashMap<Integer, MedicalFacility> facilities = new HashMap<Integer, MedicalFacility>();
 
 	public static void main(String[] args) {
 
@@ -49,7 +51,7 @@ public class Application {
 			Statement stmt = conn.createStatement();
 
 			// demo read code
-			ResultSet rs = stmt.executeQuery("select * from cat");
+			ResultSet rs = stmt.executeQuery("SELECT * FROM cat");
 
 			// Demo for reading to a variable
 			// Rule rule = new Rule();
@@ -62,6 +64,7 @@ public class Application {
 			}
 
 			// SETUP GLOBALS HASHMAPS
+			loadFacilities();
 			loadSeverityScales();
 			loadBodyParts();
 			loadSymptoms();
@@ -82,10 +85,21 @@ public class Application {
 		}
 	}
 
+	private static void loadFacilities() throws SQLException {
+		Statement stmt = conn.createStatement();
+		ResultSet rs = stmt
+				.executeQuery("SELECT * FROM medical_facility f INNER JOIN address a ON f.address_id = a.address_id");
+
+		while (rs.next()) {
+			MedicalFacility facility = new MedicalFacility();
+			facility.load(rs);
+		}
+	}
+
 	private static void loadSeverityScales() throws SQLException {
 		Statement stmt = conn.createStatement();
-		ResultSet rs = stmt.executeQuery("SELECT * from severity_scale ss inner join severity_scale_value ssv "
-				+ "on ss.severity_scale_id = ssv.severity_scale_id");
+		ResultSet rs = stmt.executeQuery("SELECT * FROM severity_scale ss INNER JOIN severity_scale_value ssv "
+				+ "ON ss.severity_scale_id = ssv.severity_scale_id");
 
 		while (rs.next()) {
 			int id = rs.getInt("severity_scale_id");
@@ -105,7 +119,7 @@ public class Application {
 
 	private static void loadSymptoms() throws SQLException {
 		Statement stmt = conn.createStatement();
-		ResultSet rs = stmt.executeQuery("SELECT * from symptom");
+		ResultSet rs = stmt.executeQuery("SELECT * FROM symptom");
 
 		while (rs.next()) {
 			Symptom symptom = new Symptom();
@@ -116,7 +130,7 @@ public class Application {
 
 	private static void loadBodyParts() throws Exception {
 		Statement stmt = conn.createStatement();
-		ResultSet rs = stmt.executeQuery("SELECT * from body_part");
+		ResultSet rs = stmt.executeQuery("SELECT * FROM body_part");
 
 		while (rs.next()) {
 			BodyPart bodyPart = new BodyPart();
@@ -179,6 +193,8 @@ public class Application {
 	private static void displaySignIn() throws Exception {
 		int choice = 0;
 		StringBuilder sb = null;
+
+		// TODO: Check if already signed in
 
 		while (choice != 2) {
 
@@ -249,7 +265,7 @@ public class Application {
 	}
 
 	private static void displayStaffMenu() {
-		// TODO Auto-generated method stub
+		System.out.println("Logged in");
 
 	}
 
