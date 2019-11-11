@@ -5,10 +5,17 @@ import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
 
+import beans.BodyPart;
 import beans.Patient;
+import beans.Rule;
+import beans.SeverityScale;
+import beans.SeverityScaleValue;
 import beans.Staff;
+import beans.Symptom;
 
 public class Application {
 
@@ -19,6 +26,12 @@ public class Application {
 
 	static Patient checkedInPatient = null;
 	static Staff checkedInStaff = null;
+
+	static HashMap<String, BodyPart> bodyParts = new HashMap<String, BodyPart>();
+	static HashMap<String, Symptom> symptoms = new HashMap<String, Symptom>();
+	static HashMap<Integer, SeverityScale> severityScales = new HashMap<Integer, SeverityScale>();
+	static HashMap<Integer, SeverityScaleValue> severityScaleValues = new HashMap<Integer, SeverityScaleValue>();
+	static HashMap<Integer, Rule> rules = new HashMap<Integer, Rule>();
 
 	public static void main(String[] args) {
 
@@ -48,6 +61,12 @@ public class Application {
 				System.out.println(name);
 			}
 
+			// SETUP GLOBALS HASHMAPS
+			loadSeverityScales();
+			loadBodyParts();
+			loadSymptoms();
+			loadRules();
+
 			displayHome();
 
 			System.out.println("");
@@ -63,13 +82,75 @@ public class Application {
 		}
 	}
 
+	private static void loadSeverityScales() throws SQLException {
+		Statement stmt = conn.createStatement();
+		ResultSet rs = stmt.executeQuery("SELECT * from severity_scale ss inner join severity_scale_value ssv "
+				+ "on ss.severity_scale_id = ssv.severity_scale_id");
+
+		while (rs.next()) {
+			int id = rs.getInt("severity_scale_id");
+			SeverityScale scale = severityScales.get(Integer.valueOf(id));
+			if (scale == null) {
+				scale = new SeverityScale();
+			}
+			scale.load(rs);
+			severityScales.put(scale.getSeverityScaleId(), scale);
+			// add to severity scale value map. we need this to load rule symptom and
+			// symptom metadata
+			SeverityScaleValue scaleValue = new SeverityScaleValue();
+			scaleValue.load(rs);
+			severityScaleValues.put(scaleValue.getSeverityValueId(), scaleValue);
+		}
+	}
+
+	private static void loadSymptoms() throws SQLException {
+		Statement stmt = conn.createStatement();
+		ResultSet rs = stmt.executeQuery("SELECT * from symptom");
+
+		while (rs.next()) {
+			Symptom symptom = new Symptom();
+			symptom.load(rs, bodyParts, severityScales);
+			symptoms.put(symptom.getSymptomCode(), symptom);
+		}
+	}
+
+	private static void loadBodyParts() throws Exception {
+		Statement stmt = conn.createStatement();
+		ResultSet rs = stmt.executeQuery("SELECT * from body_part");
+
+		while (rs.next()) {
+			BodyPart bodyPart = new BodyPart();
+			bodyPart.load(rs);
+			bodyParts.put(bodyPart.getBodyPartCode(), bodyPart);
+		}
+	}
+
+	private static void loadRules() throws Exception {
+		Statement stmt = conn.createStatement();
+		ResultSet rs = stmt
+				.executeQuery("SELECT r.*,rs.* FROM rule r INNER JOIN rule_consists rc ON r.rule_id = rc.rule_id "
+						+ "INNER JOIN rule_symptom rs ON rc.rule_symptom_id = rs.rule_symptom_id");
+
+		while (rs.next()) {
+			int id = rs.getInt("rule_id");
+			Rule rule = rules.get(Integer.valueOf(id));
+			if (rule == null) {
+				rule = new Rule();
+			}
+			rule.load(rs, bodyParts, symptoms, severityScaleValues);
+			rules.put(rule.getRuleId(), rule);
+		}
+
+	}
+
 	private static void displayHome() throws Exception {
 		int choice = 0;
 		StringBuilder sb = null;
 
 		while (choice != 4) {
 			sb = new StringBuilder();
-			sb.append("\n1. Sign-in\n");
+			sb.append("\nPlease choose from the below options:\n");
+			sb.append("1. Sign-in\n");
 			sb.append("2. Sign-up (patient)\n");
 			sb.append("3. Demo queries\n");
 			sb.append("4. Exit");
@@ -101,7 +182,7 @@ public class Application {
 
 		while (choice != 2) {
 
-			String facilityId, dob, city = null, lname = null, patient;
+			String facilityId, dob, city, lname, patient;
 			System.out.println("\nPlease enter the following information:\nFacility ID");
 			facilityId = br.readLine();
 			System.out.println("Patient? (y/n)");
