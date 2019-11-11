@@ -1,6 +1,6 @@
 package beans;
 
-public class bodyPart {
+public class BodyPart {
 	private String bodyPartCode;
 	private String name;
 	
