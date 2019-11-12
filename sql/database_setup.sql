@@ -379,9 +379,6 @@ FOREIGN KEY(facility_id) REFERENCES medical_facility(facility_id);
 
 ALTER TABLE check_in ADD(CONSTRAINT check_in_priority CHECK(priority IN('H', 'N', 'Q')));
 
---add constraint
-for SYM prefix
-
 ALTER TABLE symptom
 ADD CONSTRAINT FK_SymptomSSID
 FOREIGN KEY(severity_scale_id) REFERENCES severity_scale(severity_scale_id);
@@ -455,6 +452,25 @@ SELECT severity_value_id_sequence.nextval
 INTO: new.severity_value_id
 
 CREATE SEQUENCE rule_sequence;
+                  
+                                                                                                       
+--trigger for symptom_code with 'SYM' prefix
+CREATE SEQUENCE symptom_seq
+START WITH 1
+INCREMENT BY 1
+NOCACHE
+NOCYCLE;
+/
+
+CREATE OR REPLACE TRIGGER symptom_trigger  
+BEFORE INSERT ON symptom
+FOR EACH ROW
+BEGIN
+  SELECT 'SYM' || to_char(symptom_seq.NEXTVAL, '000099')
+  INTO   :new.symptom_code
+  FROM   dual;
+END;
+/                                                                                                      
 
 
 CREATE OR REPLACE TRIGGER rule_on_insert
