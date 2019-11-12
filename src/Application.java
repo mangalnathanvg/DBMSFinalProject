@@ -282,6 +282,8 @@ public class Application {
 	private static void displayPatientRouting() {
 		System.out.println("Logged in");
 	}
+	
+	
 	//Mangal - Method to add new symptom to the database.
 	private static void addSymptoms() throws Exception {
 	
@@ -313,7 +315,7 @@ public class Application {
 			System.out.println(Integer.toString(i) + ") " + bpcode + " - " + value);
 			i++;
 		}
-		
+		System.out.print("Choice: ");
 		temp = br.readLine();
 		
 		if(temp!="") {
@@ -347,6 +349,7 @@ public class Application {
 			System.out.println(Integer.toString(i)+ ") " + sv + " - " + value);
 			i++;
 		}
+		System.out.print("Choice: ");
 		temp = br.readLine();
 		
 		if(temp!="") {
@@ -401,7 +404,7 @@ public class Application {
 	}
 	
 	
-	
+	//Mangal - Method to add new severity scale.
 	private static void addSeverityScale() throws Exception {
 		String severityScaleName="";
 		int choice;
@@ -420,18 +423,19 @@ public class Application {
 
 
 		flag = true;
-		Set<String> scaleValues = new HashSet<String>();
-		Set<String> order = new HashSet<String>();
+		ArrayList<String> scaleValues = new ArrayList<String>();
+		ArrayList<String> order = new ArrayList<String>();
 		while(flag) {
 			if(!scaleValues.isEmpty()) {
 				System.out.println("Current scale values with order for " + severityScaleName + ": ");
 				Iterator<String> itr = scaleValues.iterator();
 				Iterator<String> ito = order.iterator();
 				while(itr.hasNext() && ito.hasNext()) {
-					System.out.println(ito.next() + " - " + itr.next());
+					System.out.println("Rank " + ito.next() + " - " + itr.next());
 				}
 			}
 			StringBuilder sb = new StringBuilder();
+			System.out.println("Select an option below:");
 			sb.append("1. Add new scale value\n");
 			
 			if(!scaleValues.isEmpty()) {
@@ -441,6 +445,7 @@ public class Application {
 			choice = -1;
 			
 			try {
+				System.out.print("\nChoice: ");
 				choice = Integer.parseInt(br.readLine());
 			}catch(NumberFormatException e) {
 				System.out.println("Invalid choice!");
@@ -451,11 +456,11 @@ public class Application {
 				System.out.println("Enter scale value to be added (Numeric or Alphanumeric): ");
 				String temp = br.readLine();
 				scaleValues.add(temp);
-				
+				String scname = temp;
 				boolean f = true;
 				
 				while(f) {
-				System.out.println("Enter the order of the scale value" + temp + " (Numeric):");
+				System.out.println("Enter the order of the scale value" + scname + " (Numeric):");
 				temp = br.readLine();
 				try {
 					int a = Integer.parseInt(temp);
