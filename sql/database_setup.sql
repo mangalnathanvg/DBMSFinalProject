@@ -466,7 +466,7 @@ CREATE OR REPLACE TRIGGER symptom_trigger
 BEFORE INSERT ON symptom
 FOR EACH ROW
 BEGIN
-  SELECT 'SYM' || to_char(symptom_seq.NEXTVAL, '000099')
+  SELECT 'SYM' || to_char(symptom_seq.NEXTVAL, 'FM999999')
   INTO   :new.symptom_code
   FROM   dual;
 END;
