@@ -8,10 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
 
 import beans.BodyPart;
 import beans.MedicalFacility;
@@ -31,7 +28,7 @@ public class Application {
 
 	static Patient checkedInPatient = null;
 	static Staff checkedInStaff = null;
-	
+
 	static HashMap<String, BodyPart> bodyParts = new HashMap<String, BodyPart>();
 	static HashMap<String, Symptom> symptoms = new HashMap<String, Symptom>();
 	static HashMap<Integer, SeverityScale> severityScales = new HashMap<Integer, SeverityScale>();
@@ -124,7 +121,7 @@ public class Application {
 	private static void loadSymptoms() throws SQLException {
 		Statement stmt = conn.createStatement();
 		ResultSet rs = stmt.executeQuery("SELECT * FROM symptom");
-
+		symptoms = new HashMap<String, Symptom>();
 		while (rs.next()) {
 			Symptom symptom = new Symptom();
 			symptom.load(rs, bodyParts, severityScales);
@@ -279,59 +276,59 @@ public class Application {
 	private static void displayPatientRouting() {
 		System.out.println("Logged in");
 	}
-	
+
 	private static void addSymptoms() throws Exception {
-	
+
 		int choice, severityID;
 		String symptomName, bodyPartAssocCode, temp;
 		System.out.println("Please enter the details as prompted");
 		System.out.println("\n Symptom Name: ");
 		symptomName = br.readLine();
 		System.out.println("\n Body Part associated (Select option and press enter or press enter to leave blank): ");
-		int i=1;
+		int i = 1;
 		ArrayList<String> bpoptions = new ArrayList<String>();
-		for(String bpcode: bodyParts.keySet()) {
+		for (String bpcode : bodyParts.keySet()) {
 			bpoptions.add(bpcode);
 			String value = bodyParts.get(bpcode).getName().toString();
 			System.out.println(Integer.toString(i) + ") " + bpcode + " - " + value);
 			i++;
 		}
-		
+
 		temp = br.readLine();
-		
-		if(temp!="") {
+
+		if (temp != "") {
 			choice = Integer.parseInt(temp);
-			bodyPartAssocCode = bodyParts.get(bpoptions.get(choice-1)).getName().toString();
-		}else {
+			bodyPartAssocCode = bodyParts.get(bpoptions.get(choice - 1)).getName().toString();
+		} else {
 			bodyPartAssocCode = "No Specific Body Part";
 		}
-		
+
 		System.out.println("Choose the severity scale below (Press Enter if you want to leave it blank)");
-		
-		i=1;
+
+		i = 1;
 		ArrayList<Integer> svcoptions = new ArrayList<Integer>();
-		for(int sv: severityScales.keySet()) {
+		for (int sv : severityScales.keySet()) {
 			svcoptions.add(sv);
 			String value = severityScales.get(sv).getName().toString();
-			System.out.println(Integer.toString(i)+ ") " + sv + " - " + value);
+			System.out.println(Integer.toString(i) + ") " + sv + " - " + value);
 			i++;
 		}
 		temp = br.readLine();
-		
-		if(temp!="") {
+
+		if (temp != "") {
 			choice = Integer.parseInt(temp);
-			severityID = svcoptions.get(choice-1);
-		}else {
+			severityID = svcoptions.get(choice - 1);
+		} else {
 			severityID = 0;
 		}
-		
+
 		// SymptomName , BodyPartAssocCode and SeverityID is associated successfully
 		System.out.println("1) Record");
 		System.out.println("2) Go Back");
 		System.out.print("\nChoice: ");
 		choice = Integer.parseInt(br.readLine());
-		if(choice==1) {
-			
+		if (choice == 1) {
+
 			PreparedStatement ps = null;
 			String sql;
 			sql = "INSERT INTO mvg_symptomtable values ( ? , ? , ? )";
@@ -340,15 +337,16 @@ public class Application {
 			ps.setString(2, Integer.toString(severityID));
 			ps.setString(3, bodyPartAssocCode);
 			ResultSet rs = ps.executeQuery();
-			if(rs!=null) {
+			if (rs != null) {
 				System.out.println("Recorded Symptoms Successfully");
-			}else {
+			} else {
 				System.out.println("Unable to record symptoms");
 			}
-			
-		}	
+
+		}
 	}
+
 	private static void addSeverityScale() {
-		
+
 	}
 }
