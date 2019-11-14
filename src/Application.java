@@ -72,7 +72,7 @@ public class Application {
 			loadSymptoms();
 			loadRules();
 
-			displayHome();
+			displayHome(); 
 
 			System.out.println("");
 
@@ -272,13 +272,65 @@ public class Application {
 		return patient;
 	}
 
-	private static void displayStaffMenu() {
-		System.out.println("Logged in");
+	//Devi - Method to display Staff Menu.
+	private static void displayStaffMenu() throws Exception {
+		StringBuilder sb = null;
+		int choice = 0;
+		boolean flag = true;
 
+		while(flag){ 
+			System.out.println("\nPlease choose one of the following options:\n");
+			sb = new StringBuilder();
+			sb.append("1. Checked-in Patient List\n");		
+			sb.append("2. Treated Patient List\n");
+			sb.append("3. Add symptoms\n");
+			sb.append("4. Add severity scale\n");
+			sb.append("5. Add assessment rule\n");
+			sb.append("6. Go back\n");
+			System.out.println(sb.toString());
+		 
+			choice = Integer.parseInt(br.readLine());
+			if (choice == 1) {
+				staffProcessPatient();
+			} 
+			else if (choice == 2) {
+				//generate outcome report
+				staffCheckOutPatient();
+			} 
+			else if (choice == 3) {
+				addSymptoms();
+			} 
+			else if (choice == 4) {
+				addSeverityScale();
+			} 
+			else if (choice == 5) {
+				addAssessmentRule();
+			} 
+			else if (choice == 6) {
+				displayHome();
+			}
+			else {
+				System.out.println("Invalid option! Please choose from the available options.");
+				continue;
+			}
+		flag = false;
+		}
+	}
+
+	private static void staffProcessPatient() {
+		System.out.println("Staff Process Patient Page");
+	}
+
+	private static void staffCheckOutPatient() {
+		System.out.println("Staff Checkout Patient Page");
 	}
 
 	private static void displayPatientRouting() {
 		System.out.println("Logged in");
+	}
+
+	private static void addAssessmentRule() {
+		System.out.println("Add Assessment Rule Page");
 	}
 
 	// Mangal - Method to add new symptom to the database.
