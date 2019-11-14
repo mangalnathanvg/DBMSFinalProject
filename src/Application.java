@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import beans.BodyPart;
 import beans.MedicalFacility;
@@ -162,14 +163,15 @@ public class Application {
 		int choice = 0;
 		StringBuilder sb = null;
 
-		while (choice != 4) {
+		while (choice != 10) {
 			sb = new StringBuilder();
 			sb.append("\nPlease choose from the below options:\n");
 			sb.append("1. Sign-in\n");
 			sb.append("2. Sign-up (patient)\n");
 			sb.append("3. Demo queries\n");
-			sb.append("4. Exit\n");
 			sb.append("5. Add Symptoms\n");
+			sb.append("6. Add Severity Scale\n");
+			sb.append("10. Exit\n");
 			System.out.println(sb.toString());
 
 			choice = Integer.parseInt(br.readLine());
@@ -181,6 +183,8 @@ public class Application {
 				displayDemoQueries();
 			} else if (choice == 5) {
 				addSymptoms();
+			} else if (choice == 6) {
+				addSeverityScale();
 			}
 		}
 
@@ -277,76 +281,271 @@ public class Application {
 		System.out.println("Logged in");
 	}
 
+	// Mangal - Method to add new symptom to the database.
 	private static void addSymptoms() throws Exception {
 
-		int choice, severityID;
-		String symptomName, bodyPartAssocCode, temp;
-		System.out.println("Please enter the details as prompted");
-		System.out.println("\n Symptom Name: ");
-		symptomName = br.readLine();
-		System.out.println("\n Body Part associated (Select option and press enter or press enter to leave blank): ");
-		int i = 1;
-		ArrayList<String> bpoptions = new ArrayList<String>();
-		for (String bpcode : bodyParts.keySet()) {
-			bpoptions.add(bpcode);
-			String value = bodyParts.get(bpcode).getName().toString();
-			System.out.println(Integer.toString(i) + ") " + bpcode + " - " + value);
-			i++;
+		int choice, severityID = 0;
+		String symptomName = "", bodyPartAssocCode = "", temp = "";
+		boolean flag = true;
+
+		// Taking symptom name as input.
+		while (flag) {
+			System.out.println("Please enter the details as prompted");
+			System.out.println("\n Symptom Name: ");
+			symptomName = br.readLine();
+
+			// Validating the symptom name entered
+			if (symptomName.isEmpty()) {
+				System.out.println("Symptom Name cannot be empty!");
+				continue;
+			}
+			/*
+			 * Flag indicates whether the loop must continue or not. The loop will not
+			 * continue if the correct symptom name is entered
+			 */
+			flag = false;
 		}
 
-		temp = br.readLine();
+		flag = true;
 
-		if (temp != "") {
-			choice = Integer.parseInt(temp);
-			bodyPartAssocCode = bodyParts.get(bpoptions.get(choice - 1)).getName().toString();
-		} else {
-			bodyPartAssocCode = "No Specific Body Part";
+		// Choosing associated body part.
+		while (flag) {
+			System.out
+					.println("\n Body Part associated (Select option and press enter or press enter to leave blank): ");
+			int i = 1;
+
+			// Body Parts options taken from master list bodyParts.
+			ArrayList<String> bpoptions = new ArrayList<String>();
+			for (String bpcode : bodyParts.keySet()) {
+				bpoptions.add(bpcode);
+				String value = bodyParts.get(bpcode).getName().toString();
+				System.out.println(Integer.toString(i) + ") " + bpcode + " - " + value);
+				i++;
+			}
+			System.out.print("Choice: ");
+			temp = br.readLine();
+
+			if (temp != "") {
+				choice = -1;
+				// Validating the choice entered.
+				try {
+					choice = Integer.parseInt(temp);
+				} catch (NumberFormatException e) {
+					System.out.println("Invalid option entered!");
+					continue;
+				}
+				if (choice < 0 || choice > bpoptions.size()) {
+					System.out.println("Invalid Choice entered!");
+					continue;
+				}
+				// Getting the selected bodyPart object from the master list.
+				bodyPartAssocCode = bodyParts.get(bpoptions.get(choice - 1)).getName().toString();
+			} else if (temp == "") {
+				// If no body part is associated.
+				bodyPartAssocCode = "No Specific Body Part";
+			}
+			flag = false;
 		}
 
-		System.out.println("Choose the severity scale below (Press Enter if you want to leave it blank)");
+		flag = true;
 
-		i = 1;
-		ArrayList<Integer> svcoptions = new ArrayList<Integer>();
-		for (int sv : severityScales.keySet()) {
-			svcoptions.add(sv);
-			String value = severityScales.get(sv).getName().toString();
-			System.out.println(Integer.toString(i) + ") " + sv + " - " + value);
-			i++;
-		}
-		temp = br.readLine();
+		// Choosing the severity scale for the symptom.
+		while (flag) {
+			System.out.println("Choose the severity scale below (Press Enter if you want to leave it blank)");
 
-		if (temp != "") {
-			choice = Integer.parseInt(temp);
-			severityID = svcoptions.get(choice - 1);
-		} else {
-			severityID = 0;
-		}
+			int i = 1;
+			// Displaying Severity scales from the master list.
+			ArrayList<Integer> svcoptions = new ArrayList<Integer>();
+			for (int sv : severityScales.keySet()) {
+				svcoptions.add(sv);
+				String value = severityScales.get(sv).getName().toString();
+				System.out.println(Integer.toString(i) + ") " + sv + " - " + value);
+				i++;
+			}
+			System.out.print("Choice: ");
+			temp = br.readLine();
 
-		// SymptomName , BodyPartAssocCode and SeverityID is associated successfully
-		System.out.println("1) Record");
-		System.out.println("2) Go Back");
-		System.out.print("\nChoice: ");
-		choice = Integer.parseInt(br.readLine());
-		if (choice == 1) {
-
-			PreparedStatement ps = null;
-			String sql;
-			sql = "INSERT INTO mvg_symptomtable values ( ? , ? , ? )";
-			ps = conn.prepareStatement(sql);
-			ps.setString(1, symptomName);
-			ps.setString(2, Integer.toString(severityID));
-			ps.setString(3, bodyPartAssocCode);
-			ResultSet rs = ps.executeQuery();
-			if (rs != null) {
-				System.out.println("Recorded Symptoms Successfully");
+			// Validating the choice entered.
+			if (temp != "") {
+				choice = -1;
+				try {
+					choice = Integer.parseInt(temp);
+				} catch (NumberFormatException e) {
+					System.out.println("Invalid option entered!");
+					continue;
+				}
+				if (choice <= 0 || choice > svcoptions.size()) {
+					System.out.println("Invalid Choice entered!");
+					continue;
+				}
+				// Getting the selected severity scale from the master list.
+				severityID = svcoptions.get(choice - 1);
 			} else {
-				System.out.println("Unable to record symptoms");
+				severityID = 0;
+			}
+			flag = false;
+		}
+
+		flag = true;
+		// SymptomName , BodyPartAssocCode and SeverityID is associated successfully.
+		// Entering these values to the database accordingly.
+		while (flag) {
+			System.out.println("1) Record");
+			System.out.println("2) Go Back");
+			System.out.print("\nChoice: ");
+			choice = Integer.parseInt(br.readLine());
+			if (choice == 1) {
+
+				PreparedStatement ps = null;
+				String sql;
+				sql = "INSERT INTO mvg_symptomtable values ( ? , ? , ? )";
+				ps = conn.prepareStatement(sql);
+				ps.setString(1, symptomName);
+				ps.setString(2, Integer.toString(severityID));
+				ps.setString(3, bodyPartAssocCode);
+				ResultSet rs = ps.executeQuery();
+				if (rs != null) {
+					System.out.println("Recorded Symptoms Successfully");
+				} else {
+					System.out.println("Unable to record symptoms");
+				}
+
+			} else if (choice != 2) {
+				System.out.println("Invalid Option selected!");
+				continue;
+			}
+			flag = false;
+		}
+
+	}
+
+	// Mangal - Method to add new severity scale.
+	private static void addSeverityScale() throws Exception {
+		String severityScaleName = "";
+		int choice;
+		boolean flag = true;
+		// Recording the name of the severity scale.
+		while (flag) {
+			System.out.println("Enter the name of the Severity scale to be added:");
+			severityScaleName = br.readLine();
+			// Validating the name of the severity scale.
+			if (severityScaleName.isEmpty()) {
+				System.out.println("Please enter a severity scale name");
+				continue;
+			}
+			flag = false;
+		}
+
+		flag = true;
+		ArrayList<String> scaleValues = new ArrayList<String>();
+		ArrayList<String> order = new ArrayList<String>();
+		// Displaying previously added scale values.
+		while (flag) {
+			if (!scaleValues.isEmpty()) {
+				System.out.println("Current scale values with order for " + severityScaleName + ": ");
+				Iterator<String> itr = scaleValues.iterator();
+				Iterator<String> ito = order.iterator();
+				while (itr.hasNext() && ito.hasNext()) {
+					System.out.println("Rank " + ito.next() + " - " + itr.next());
+				}
 			}
 
+			// Entering new scale and its order.
+			StringBuilder sb = new StringBuilder();
+			System.out.println("Select an option below:");
+			sb.append("1. Add new scale value\n");
+
+			if (!scaleValues.isEmpty()) {
+				sb.append("2. No more scales to add\n");
+			}
+			System.out.println(sb.toString());
+			choice = -1;
+
+			try {
+				System.out.print("\nChoice: ");
+				choice = Integer.parseInt(br.readLine());
+			} catch (NumberFormatException e) {
+				System.out.println("Invalid choice!");
+				continue;
+			}
+
+			if (choice == 1) {
+				System.out.println("Enter scale value to be added (Numeric or Alphanumeric): ");
+				String temp = br.readLine();
+				scaleValues.add(temp);
+				String scname = temp;
+				boolean f = true;
+
+				while (f) {
+					System.out.println("Enter the order of the scale value" + scname + " (Numeric):");
+					temp = br.readLine();
+					try {
+						int a = Integer.parseInt(temp);
+					} catch (NumberFormatException e) {
+						System.out.println("Order must be a number!");
+						continue;
+					}
+
+					if (order.contains(temp)) {
+						System.out.println("Order already assigned to another scale value");
+						continue;
+					}
+
+					f = false;
+				}
+				order.add(temp);
+				continue;
+			}
+
+			if (choice > 2) {
+				System.out.println("Invalid Choice!");
+				continue;
+			}
+			flag = false;
+		}
+
+		// Validating if scale has scale values. Will not be recorded to the database if
+		// scale has no values.
+		if (!scaleValues.isEmpty()) {
+
+			String svscaleid = "100", svvalueid = "100X";
+			PreparedStatement ps = null;
+			String sql;
+			// Adding severity scale details
+			sql = "INSERT INTO mvg_svscaletable values ( ? , ? )";
+			ps = conn.prepareStatement(sql);
+			ps.setString(1, svscaleid);
+			ps.setString(2, severityScaleName);
+			ResultSet rs = ps.executeQuery();
+
+			sql = "SELECT sv_scale_id from mvg_svscaletable WHERE sv_scale_id = ?";
+			ps = conn.prepareStatement(sql);
+			ps.setString(1, svscaleid);
+			ResultSet rs1 = ps.executeQuery();
+			String scaleid = null;
+			while (rs1.next()) {
+				scaleid = rs1.getString("sv_scale_id");
+			}
+			// Adding severity scale value details of the severity scale entered above.
+			sql = "INSERT INTO mvg_svvaluetable values(?,?,?,?)";
+
+			Iterator<String> itr = scaleValues.iterator();
+			Iterator<String> ito = order.iterator();
+
+			while (itr.hasNext() && ito.hasNext()) {
+				ps = conn.prepareStatement(sql);
+				ps.setString(1, svvalueid);
+				ps.setString(2, itr.next());
+				ps.setString(3, scaleid);
+				ps.setString(4, ito.next());
+				rs = ps.executeQuery();
+			}
+
+			System.out.println("Added new severity scale with values");
+
+		} else {
+			System.out.println("Cannot record a Severity Scale without any scale values!");
 		}
 	}
 
-	private static void addSeverityScale() {
-
-	}
 }
