@@ -50,20 +50,6 @@ public class Application {
 
 		try {
 			conn = DriverManager.getConnection(jdbcURL, user, passwd);
-			Statement stmt = conn.createStatement();
-
-			// demo read code
-			ResultSet rs = stmt.executeQuery("SELECT * FROM cat");
-
-			// Demo for reading to a variable
-			// Rule rule = new Rule();
-			// rule.setRuleId(rs.getInt("rule_id"));
-			// rule.setPriority(rs.getString("priority").charAt(0));
-
-			while (rs.next()) {
-				String name = rs.getString("name");
-				System.out.println(name);
-			}
 
 			// SETUP GLOBALS HASHMAPS
 			loadFacilities();
@@ -76,8 +62,6 @@ public class Application {
 
 			System.out.println("");
 
-			rs.close();
-			stmt.close();
 			conn.close();
 		} catch (Exception e) {
 //			System.out.println("Error occured: " + e);
@@ -162,7 +146,7 @@ public class Application {
 	private static void displayHome() throws Exception {
 		int choice = 0;
 		StringBuilder sb = null;
-
+		System.out.println("Medical Facility Performance Dashboard Application");
 		while (choice != 10) {
 			sb = new StringBuilder();
 			sb.append("\nPlease choose from the below options:\n");
