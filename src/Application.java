@@ -534,11 +534,23 @@ public class Application {
 			}
 
 			if (choice == 1) {
-				System.out.println("Enter scale value to be added (Numeric or Alphanumeric): ");
-				String temp = br.readLine();
-				scaleValues.add(temp);
-				String scname = temp;
+
 				boolean f = true;
+				String scname = null, temp = null;
+				while (f) {
+					System.out.println("Enter scale value to be added (Numeric or Alphanumeric): ");
+					temp = br.readLine();
+
+					if (scaleValues.contains(temp)) {
+						System.out.println("Scale Value already exists for this table! Please enter new scale value");
+						continue;
+					}
+					scaleValues.add(temp);
+					scname = temp;
+					f = false;
+				}
+
+				f = true;
 
 				while (f) {
 					System.out.println("Enter the order of the scale value" + scname + " (Numeric):");
