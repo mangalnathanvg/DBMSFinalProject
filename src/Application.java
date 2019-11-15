@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import beans.BodyPart;
+import beans.CheckIn;
 import beans.MedicalFacility;
 import beans.Patient;
 import beans.Rule;
@@ -273,6 +274,7 @@ public class Application {
 //			}
 			facilityIndex = readNumber(1, facilityList.size());
 			int facilityId = facilityList.get(facilityIndex - 1).getFacilityId();
+			System.out.println(facilityId);
 
 			System.out.println("Patient? (y/n):");
 			String[] options = new String[] { "n", "y" };
@@ -305,13 +307,15 @@ public class Application {
 					// check in with facilityId
 					if (checkedInPatient != null) {
 						System.out.println("\nLogged in successfully.\n");
-						displayPatientRouting();
+						displayPatientRouting(facilityId);
 
 					}
 				} else {
 					System.out.println("\nLogged in successfully.\n");
 					checkedInStaff = loadStaff(name, dateOfBirth, city, facilityId);
-					displayStaffMenu();
+					if (checkedInStaff != null) {
+						displayStaffMenu();
+					}
 				}
 				if (checkedInPatient == null && checkedInStaff == null) {
 					System.out.println("Sign-in incorrect\n");
@@ -328,7 +332,7 @@ public class Application {
 	private static Staff loadStaff(String lname, Date dateOfBirth, String city, int facilityId) throws SQLException {
 		Staff staff = null;
 		String sql = "SELECT s.* FROM staff s INNER JOIN medical_facility f on s.facility_id = f.facility_id INNER JOIN address a ON f.address_id = a.address_id "
-				+ "WHERE upper(s.name) = upper(?) AND upper(a.city) = upper(?) AND to_char(s.date_of_birth, 'YYYY-MM-DD') = ? and f.facility_id = ?";
+				+ "WHERE upper(s.name) = upper(?) AND upper(a.city) = upper(?) AND to_char(s.date_of_birth, 'YYYY-MM-DD') = ? and s.facility_id = ?";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		ps.setString(1, lname);
 		ps.setString(2, city);
@@ -407,8 +411,67 @@ public class Application {
 		System.out.println("Staff Checkout Patient Page");
 	}
 
-	private static void displayPatientRouting() {
-		System.out.println("\n===| P |===\n");
+	private static void displayPatientRouting(int facilityId) throws Exception {
+		System.out.println("\n===| Patient Routing |===\n");
+
+		while (true) {
+			System.out.println("\nPlease choose one of the following options:\n");
+			StringBuilder sb = new StringBuilder();
+			sb.append("1. Check-in\n");
+			sb.append("2. Check-out acknowledgement\n");
+			sb.append("3. Go back\n");
+			System.out.println(sb.toString());
+
+			CheckIn checkinUnderProcess = loadCheckinUnderProcess(checkedInPatient.getPatientId(), facilityId);
+			int choice = 0;
+			while (true) {
+				choice = readNumber(1, 3);
+				// TODO : verify logic
+				if (choice == 2 && (checkinUnderProcess == null
+						|| checkinUnderProcess.getTreatment().getTreatmentTime() == null)) {
+					System.out.println("Cannot checkout without being treated.");
+				} else if (checkinUnderProcess != null && choice == 1) {
+					System.out.println("Cannot checkin without checking out first.");
+				} else {
+					break;
+				}
+			}
+			if (choice == 1) {
+				checkinUnderProcess = new CheckIn();
+				checkinUnderProcess.setFacilityId(facilityId);
+				checkinUnderProcess.setPatientId(checkedInPatient.getPatientId());
+//			checkinUnderProcess.setStartTime(new Timestamp(System.currentTimeMillis())); // After completing data entry
+				checkinUnderProcess.save(conn); // TODO implement this method
+				displayPatientCheckIn(checkinUnderProcess);
+			} else if (choice == 2) {
+				displayPatientAcknowledgement(checkinUnderProcess);
+			} else if (choice == 3) {
+				break;
+			}
+		}
+	}
+
+	private static void displayPatientAcknowledgement(CheckIn checkinUnderProcess) {
+
+	}
+
+	private static void displayPatientCheckIn(CheckIn checkinUnderProcess) {
+
+	}
+
+	private static CheckIn loadCheckinUnderProcess(int patientId, int facilityId) throws SQLException {
+		CheckIn checkIn = null;
+		String sql = "SELECT * FROM (SELECT * FROM check_in c INNER JOIN patient p ON c.patient_id = p.patient_id "
+				+ "INNER JOIN medical_facility m ON m.facility_id = c.facility_id LEFT JOIN vital_signs v ON v.check_in_id = v.check_in_id "
+				+ "LEFT JOIN treatment t ON t.check_in_id = c.check_in_id WHERE c.patient_id = ? AND m.facility_id = ? AND t.treatment_time is null) WHERE ROWNUM = 1";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setInt(1, patientId);
+		ResultSet rs = ps.executeQuery();
+		if (rs.next()) {
+			checkIn = new CheckIn();
+			checkIn.load(rs);
+		}
+		return checkIn;
 	}
 
 	private static void addAssessmentRule() {
