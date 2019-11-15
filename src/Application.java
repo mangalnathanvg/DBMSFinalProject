@@ -1,4 +1,5 @@
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.Date;
@@ -158,12 +159,13 @@ public class Application {
 			sb.append("7. Exit\n");
 			System.out.println(sb.toString());
 
-			while (true) {
-				choice = validateNumber(br.readLine(), 1, 7);
-				if (choice != -1) {
-					break;
-				}
-			}
+//			while (true) {
+//				choice = validateNumber(br.readLine(), 1, 7);
+//				if (choice != -1) {
+//					break;
+//				}
+//			}
+			choice = readNumber(1, 7);
 
 			if (choice == 1) {
 				displaySignIn();
@@ -190,41 +192,56 @@ public class Application {
 
 	}
 
-	private static int validateNumber(String number, int min, int max) {
+	private static int readNumber(int min, int max) throws IOException {
 		int choice = -1;
-		try {
-			choice = Integer.parseInt(number);
-		} catch (NumberFormatException e) {
-			System.out.println("Please enter a valid number:");
-		}
-		if (choice != -1 && (choice < min || choice > max)) {
-			System.out.println("Please enter a valid choice:");
-			choice = -1;
+		while (true) {
+			try {
+				choice = Integer.parseInt(br.readLine());
+			} catch (NumberFormatException e) {
+				System.out.println("Please enter a valid number:");
+				choice = -1;
+			}
+			if (choice != -1 && (choice < min || choice > max)) {
+				System.out.println("Please enter a valid choice:");
+			} else if (choice != -1) {
+				break;
+			}
 		}
 		return choice;
 	}
 
-	private static String validateChar(String ch, String[] options) {
-		boolean found = false;
-		for (String option : options) {
-			if (ch.equalsIgnoreCase(option)) {
-				found = true;
+	private static char readChar(String[] options) throws IOException {
+		String str;
+		while (true) {
+			String ch = br.readLine();
+			boolean found = false;
+			for (String option : options) {
+				if (ch.equalsIgnoreCase(option)) {
+					found = true;
+				}
+			}
+			if (found) {
+				str = ch;
+				break;
+			} else {
+				System.out.println("Please enter valid option:");
+				str = null;
 			}
 		}
-		if (found) {
-			return ch;
-		} else {
-			System.out.println("Please enter valid option:");
-			return null;
-		}
+		return str.charAt(0);
 	}
 
-	private static Date validateDate(String date) {
+	private static Date readDate() {
 		Date dt = null;
-		try {
-			dt = Date.valueOf(date);
-		} catch (Exception e) {
-			System.out.println("Please enter a valid date in the specified format:");
+		while (true) {
+			try {
+				dt = Date.valueOf(br.readLine());
+			} catch (Exception e) {
+				System.out.println("Please enter a valid date in the specified format:");
+			}
+			if (dt != null) {
+				break;
+			}
 		}
 		return dt;
 	}
@@ -238,7 +255,7 @@ public class Application {
 		while (true) {
 			System.out.println("\n===| Sign-in |===\n");
 
-			String city, name, patient;
+			String city, name;
 			System.out.println("Please enter the details as prompted");
 			System.out.println("\nFacility (Select from below options): ");
 			int idx = 1;
@@ -248,24 +265,19 @@ public class Application {
 				System.out.println(idx++ + " - " + facility.getName());
 			}
 			int facilityIndex = 0;
-			while (true) {
-				facilityIndex = validateNumber(br.readLine(), 1, facilityList.size());
-				if (facilityIndex != -1) {
-					break;
-				}
-			}
+//			while (true) {
+//				facilityIndex = validateNumber(br.readLine(), 1, facilityList.size());
+//				if (facilityIndex != -1) {
+//					break;
+//				}
+//			}
+			facilityIndex = readNumber(1, facilityList.size());
 			int facilityId = facilityList.get(facilityIndex - 1).getFacilityId();
 
 			System.out.println("Patient? (y/n):");
-			boolean isPatient = false;
-			while (true) {
-				String[] options = new String[] { "n", "y" };
-				patient = validateChar(br.readLine(), options);
-				if (patient != null) {
-					isPatient = patient.equalsIgnoreCase("y");
-					break;
-				}
-			}
+			String[] options = new String[] { "n", "y" };
+			char patient = readChar(options);
+			boolean isPatient = (patient == 'y' || patient == 'Y');
 			if (isPatient) {
 				System.out.println("Last Name:");
 			} else {
@@ -273,15 +285,8 @@ public class Application {
 			}
 			name = br.readLine();
 
-			Date dateOfBirth = null;
 			System.out.println("Date of birth (YYYY-MM-DD):");
-//			dob = br.readLine();
-			while (true) {
-				dateOfBirth = validateDate(br.readLine());
-				if (dateOfBirth != null) {
-					break;
-				}
-			}
+			Date dateOfBirth = readDate();
 
 			System.out.println("City of address:");
 			city = br.readLine();
@@ -292,13 +297,7 @@ public class Application {
 			sb.append("2. Go back\n");
 			System.out.println(sb.toString());
 
-			while (true) {
-				choice = validateNumber(br.readLine(), 1, 2);
-				if (choice != -1) {
-					break;
-				}
-			}
-
+			choice = readNumber(1, 2);
 			if (choice == 1) {
 				if (isPatient) {
 					checkedInPatient = loadPatient(name, dateOfBirth, city);
@@ -307,6 +306,7 @@ public class Application {
 					if (checkedInPatient != null) {
 						System.out.println("\nLogged in successfully.\n");
 						displayPatientRouting();
+
 					}
 				} else {
 					System.out.println("\nLogged in successfully.\n");
@@ -315,6 +315,8 @@ public class Application {
 				}
 				if (checkedInPatient == null && checkedInStaff == null) {
 					System.out.println("Sign-in incorrect\n");
+				} else {
+					break;
 				}
 			} else if (choice == 2) {
 				break;
@@ -388,7 +390,7 @@ public class Application {
 			} else if (choice == 5) {
 				addAssessmentRule();
 			} else if (choice == 6) {
-				displayHome();
+				break;
 			} else {
 				System.out.println("Invalid option! Please choose from the available options.");
 				continue;
