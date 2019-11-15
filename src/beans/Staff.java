@@ -66,21 +66,30 @@ public class Staff {
 	}
 
 	public ServiceDepartment getPrimaryDepartment(Connection conn) throws SQLException {
-		ServiceDepartment serviceDepartment = null;
-		Statement stmt = conn.createStatement();
-		ResultSet rs = stmt.executeQuery(
-				"SELECT * FROM service_department sd LEFT JOIN department_speciality ds ON sd.department_code = ds.department_code WHERE ds.department_code = "
-						+ primaryDeptCode);
+		if (primaryDepartment == null) {
+			Statement stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery(
+					"SELECT * FROM service_department sd LEFT JOIN department_speciality ds ON sd.department_code = ds.department_code WHERE ds.department_code = "
+							+ primaryDeptCode);
 
-		while (rs.next()) {
-			serviceDepartment = new ServiceDepartment();
-			serviceDepartment.load(rs);
+			while (rs.next()) {
+				primaryDepartment = new ServiceDepartment();
+				primaryDepartment.load(rs);
+			}
 		}
-		return serviceDepartment;
+		return primaryDepartment;
 	}
 
 	public boolean isMedical() {
 		return (designation == 'M');
+	}
+
+	public void load(ResultSet rs) throws SQLException {
+		staffId = rs.getInt("staff_id");
+		name = rs.getString("name");
+		designation = rs.getString("designation").charAt(0);
+		dateOfBirth = rs.getDate("date_of_birth");
+		hireDate = rs.getDate("hire_date");
 	}
 
 }

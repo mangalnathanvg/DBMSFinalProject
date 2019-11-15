@@ -79,6 +79,7 @@ public class Application {
 		while (rs.next()) {
 			MedicalFacility facility = new MedicalFacility();
 			facility.load(rs);
+			facilities.put(facility.getFacilityId(), facility);
 		}
 	}
 
@@ -106,7 +107,6 @@ public class Application {
 	private static void loadSymptoms() throws SQLException {
 		Statement stmt = conn.createStatement();
 		ResultSet rs = stmt.executeQuery("SELECT * FROM symptom");
-		symptoms = new HashMap<String, Symptom>();
 		while (rs.next()) {
 			Symptom symptom = new Symptom();
 			symptom.load(rs, bodyParts, severityScales);
@@ -147,7 +147,7 @@ public class Application {
 		int choice = 0;
 		StringBuilder sb = null;
 		System.out.println("Medical Facility Performance Dashboard Application");
-		while (choice != 10) {
+		while (true) {
 			sb = new StringBuilder();
 			sb.append("\nPlease choose from the below options:\n");
 			sb.append("1. Sign-in\n");
@@ -155,10 +155,16 @@ public class Application {
 			sb.append("3. Demo queries\n");
 			sb.append("5. Add Symptoms\n");
 			sb.append("6. Add Severity Scale\n");
-			sb.append("10. Exit\n");
+			sb.append("7. Exit\n");
 			System.out.println(sb.toString());
 
-			choice = Integer.parseInt(br.readLine());
+			while (true) {
+				choice = validateNumber(br.readLine(), 1, 7);
+				if (choice != -1) {
+					break;
+				}
+			}
+
 			if (choice == 1) {
 				displaySignIn();
 			} else if (choice == 2) {
@@ -169,6 +175,8 @@ public class Application {
 				addSymptoms();
 			} else if (choice == 6) {
 				addSeverityScale();
+			} else if (choice == 7) {
+				break;
 			}
 		}
 
@@ -182,32 +190,101 @@ public class Application {
 
 	}
 
+	private static int validateNumber(String number, int min, int max) {
+		int choice = -1;
+		try {
+			choice = Integer.parseInt(number);
+		} catch (NumberFormatException e) {
+			System.out.println("Please enter a valid number:");
+		}
+		if (choice != -1 && (choice < min || choice > max)) {
+			System.out.println("Please enter a valid choice:");
+			choice = -1;
+		}
+		return choice;
+	}
+
+	private static String validateChar(String ch, String[] options) {
+		boolean found = false;
+		for (String option : options) {
+			if (ch.equalsIgnoreCase(option)) {
+				found = true;
+			}
+		}
+		if (found) {
+			return ch;
+		} else {
+			System.out.println("Please enter valid option:");
+			return null;
+		}
+	}
+
+	private static Date validateDate(String date) {
+		Date dt = null;
+		try {
+			dt = Date.valueOf(date);
+		} catch (Exception e) {
+			System.out.println("Please enter a valid date in the specified format:");
+		}
+		return dt;
+	}
+
 	private static void displaySignIn() throws Exception {
 		int choice = 0;
 		StringBuilder sb = null;
 
 		// TODO: Check if already signed in
 
-		while (choice != 2) {
+		while (true) {
+			System.out.println("\n===| Sign-in |===\n");
 
-			String facilityId, dob, city, lname, patient;
-			System.out.println("\nPlease enter the following information:\nFacility ID");
-			facilityId = br.readLine();
-			System.out.println("Patient? (y/n)");
-			patient = br.readLine();
-			boolean isPatient = patient.equalsIgnoreCase("y");
-			if (isPatient) {
-				System.out.println("Last Name");
-			} else {
-				System.out.println("Name");
+			String city, name, patient;
+			System.out.println("Please enter the details as prompted");
+			System.out.println("\nFacility (Select from below options): ");
+			int idx = 1;
+			ArrayList<MedicalFacility> facilityList = new ArrayList<MedicalFacility>();
+			facilityList.addAll(facilities.values());
+			for (MedicalFacility facility : facilityList) {
+				System.out.println(idx++ + " - " + facility.getName());
 			}
-			lname = br.readLine();
-			System.out.println("Date of birth (YYYY-MM-DD)");
-			dob = br.readLine();
-			System.out.println("City of address");
-			city = br.readLine();
+			int facilityIndex = 0;
+			while (true) {
+				facilityIndex = validateNumber(br.readLine(), 1, facilityList.size());
+				if (facilityIndex != -1) {
+					break;
+				}
+			}
+			int facilityId = facilityList.get(facilityIndex - 1).getFacilityId();
 
-			Date dateOfBirth = Date.valueOf(dob);
+			System.out.println("Patient? (y/n):");
+			boolean isPatient = false;
+			while (true) {
+				String[] options = new String[] { "n", "y" };
+				patient = validateChar(br.readLine(), options);
+				if (patient != null) {
+					isPatient = patient.equalsIgnoreCase("y");
+					break;
+				}
+			}
+			if (isPatient) {
+				System.out.println("Last Name:");
+			} else {
+				System.out.println("Name:");
+			}
+			name = br.readLine();
+
+			Date dateOfBirth = null;
+			System.out.println("Date of birth (YYYY-MM-DD):");
+//			dob = br.readLine();
+			while (true) {
+				dateOfBirth = validateDate(br.readLine());
+				if (dateOfBirth != null) {
+					break;
+				}
+			}
+
+			System.out.println("City of address:");
+			city = br.readLine();
 
 			System.out.println("\nPlease choose from the below options:");
 			sb = new StringBuilder();
@@ -215,29 +292,52 @@ public class Application {
 			sb.append("2. Go back\n");
 			System.out.println(sb.toString());
 
-			choice = Integer.parseInt(br.readLine());
+			while (true) {
+				choice = validateNumber(br.readLine(), 1, 2);
+				if (choice != -1) {
+					break;
+				}
+			}
+
 			if (choice == 1) {
 				if (isPatient) {
-					checkedInPatient = loadPatient(lname, dateOfBirth, city);
+					checkedInPatient = loadPatient(name, dateOfBirth, city);
+					// TODO : load check in to see if returning to do feedback, else create new
+					// check in with facilityId
 					if (checkedInPatient != null) {
+						System.out.println("\nLogged in successfully.\n");
 						displayPatientRouting();
 					}
 				} else {
-					checkedInStaff = loadStaff(lname, dateOfBirth, city);
+					System.out.println("\nLogged in successfully.\n");
+					checkedInStaff = loadStaff(name, dateOfBirth, city, facilityId);
 					displayStaffMenu();
 				}
-			}
-			if (checkedInPatient == null && checkedInStaff == null) {
-				System.out.println("Sign-in incorrect\n");
-			} else {
+				if (checkedInPatient == null && checkedInStaff == null) {
+					System.out.println("Sign-in incorrect\n");
+				}
+			} else if (choice == 2) {
 				break;
 			}
 
 		}
 	}
 
-	private static Staff loadStaff(String lname, Date dateOfBirth, String city) {
-		return null;
+	private static Staff loadStaff(String lname, Date dateOfBirth, String city, int facilityId) throws SQLException {
+		Staff staff = null;
+		String sql = "SELECT s.* FROM staff s INNER JOIN medical_facility f on s.facility_id = f.facility_id INNER JOIN address a ON f.address_id = a.address_id "
+				+ "WHERE upper(s.name) = upper(?) AND upper(a.city) = upper(?) AND to_char(s.date_of_birth, 'YYYY-MM-DD') = ? and f.facility_id = ?";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setString(1, lname);
+		ps.setString(2, city);
+		ps.setString(3, dateOfBirth.toString());
+		ps.setInt(4, facilityId);
+		ResultSet rs = ps.executeQuery();
+		if (rs.next()) {
+			staff = new Staff();
+			staff.load(rs);
+		}
+		return staff;
 	}
 
 	private static Patient loadPatient(String lname, Date dateOfBirth, String city) throws Exception {
@@ -263,6 +363,8 @@ public class Application {
 		boolean flag = true;
 
 		while (flag) {
+			System.out.println("\n===| Staff Menu |===\n");
+
 			System.out.println("\nPlease choose one of the following options:\n");
 			sb = new StringBuilder();
 			sb.append("1. Checked-in Patient List\n");
@@ -304,7 +406,7 @@ public class Application {
 	}
 
 	private static void displayPatientRouting() {
-		System.out.println("Logged in");
+		System.out.println("\n===| P |===\n");
 	}
 
 	private static void addAssessmentRule() {
@@ -317,6 +419,8 @@ public class Application {
 		int choice, severityID = 0;
 		String symptomName = "", bodyPartAssocCode = "", temp = "";
 		boolean flag = true;
+
+		System.out.println("\n===| Add Symptoms |===\n");
 
 		// Taking symptom name as input.
 		while (flag) {
@@ -472,6 +576,9 @@ public class Application {
 		String severityScaleName = "";
 		int choice;
 		boolean flag = true;
+
+		System.out.println("\n===| Add Severity Scale |===\n");
+
 		// Recording the name of the severity scale.
 		while (flag) {
 			System.out.println("Enter the name of the Severity scale to be added:");
