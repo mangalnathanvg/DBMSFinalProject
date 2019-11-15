@@ -72,7 +72,7 @@ public class Application {
 			loadSymptoms();
 			loadRules();
 
-			displayHome(); 
+			displayHome();
 
 			System.out.println("");
 
@@ -272,48 +272,42 @@ public class Application {
 		return patient;
 	}
 
-	//Devi - Method to display Staff Menu.
+	// Devi - Method to display Staff Menu.
 	private static void displayStaffMenu() throws Exception {
 		StringBuilder sb = null;
 		int choice = 0;
 		boolean flag = true;
 
-		while(flag){ 
+		while (flag) {
 			System.out.println("\nPlease choose one of the following options:\n");
 			sb = new StringBuilder();
-			sb.append("1. Checked-in Patient List\n");		
+			sb.append("1. Checked-in Patient List\n");
 			sb.append("2. Treated Patient List\n");
 			sb.append("3. Add symptoms\n");
 			sb.append("4. Add severity scale\n");
 			sb.append("5. Add assessment rule\n");
 			sb.append("6. Go back\n");
 			System.out.println(sb.toString());
-		 
+
 			choice = Integer.parseInt(br.readLine());
 			if (choice == 1) {
 				staffProcessPatient();
-			} 
-			else if (choice == 2) {
-				//generate outcome report
+			} else if (choice == 2) {
+				// generate outcome report
 				staffCheckOutPatient();
-			} 
-			else if (choice == 3) {
+			} else if (choice == 3) {
 				addSymptoms();
-			} 
-			else if (choice == 4) {
+			} else if (choice == 4) {
 				addSeverityScale();
-			} 
-			else if (choice == 5) {
+			} else if (choice == 5) {
 				addAssessmentRule();
-			} 
-			else if (choice == 6) {
+			} else if (choice == 6) {
 				displayHome();
-			}
-			else {
+			} else {
 				System.out.println("Invalid option! Please choose from the available options.");
 				continue;
 			}
-		flag = false;
+			flag = false;
 		}
 	}
 
@@ -377,7 +371,7 @@ public class Application {
 			System.out.print("Choice: ");
 			temp = br.readLine();
 
-			if (temp != "") {
+			if (!temp.isEmpty()) {
 				choice = -1;
 				// Validating the choice entered.
 				try {
@@ -391,10 +385,10 @@ public class Application {
 					continue;
 				}
 				// Getting the selected bodyPart object from the master list.
-				bodyPartAssocCode = bodyParts.get(bpoptions.get(choice - 1)).getName().toString();
-			} else if (temp == "") {
+				bodyPartAssocCode = bodyParts.get(bpoptions.get(choice - 1)).getBodyPartCode().toString();
+			} else if (temp.isEmpty()) {
 				// If no body part is associated.
-				bodyPartAssocCode = "No Specific Body Part";
+				bodyPartAssocCode = "No";
 			}
 			flag = false;
 		}
@@ -418,7 +412,7 @@ public class Application {
 			temp = br.readLine();
 
 			// Validating the choice entered.
-			if (temp != "") {
+			if (!temp.isEmpty()) {
 				choice = -1;
 				try {
 					choice = Integer.parseInt(temp);
@@ -450,11 +444,29 @@ public class Application {
 
 				PreparedStatement ps = null;
 				String sql;
-				sql = "INSERT INTO mvg_symptomtable values ( ? , ? , ? )";
-				ps = conn.prepareStatement(sql);
-				ps.setString(1, symptomName);
-				ps.setString(2, Integer.toString(severityID));
-				ps.setString(3, bodyPartAssocCode);
+
+				if (bodyPartAssocCode.compareTo("No") == 0 && severityID == 0) {
+					sql = "INSERT INTO SYMPTOM(NAME) values (?)";
+					ps = conn.prepareStatement(sql);
+					ps.setString(1, symptomName);
+				} else if (bodyPartAssocCode.compareTo("No") == 0) {
+					sql = "INSERT INTO SYMPTOM(NAME, SEVERITY_SCALE_ID) values (?, ?)";
+					ps = conn.prepareStatement(sql);
+					ps.setString(1, symptomName);
+					ps.setString(2, Integer.toString(severityID));
+				} else if (severityID == 0) {
+					sql = "INSERT INTO SYMPTOM(NAME, BODY_PART_CODE) values (?, ?)";
+					ps = conn.prepareStatement(sql);
+					ps.setString(1, symptomName);
+					ps.setString(2, bodyPartAssocCode);
+				} else {
+					sql = "INSERT INTO SYMPTOM(NAME, SEVERITY_SCALE_ID, BODY_PART_CODE) values ( ? , ? , ? )";
+					ps = conn.prepareStatement(sql);
+					ps.setString(1, symptomName);
+					ps.setString(2, Integer.toString(severityID));
+					ps.setString(3, bodyPartAssocCode);
+				}
+
 				ResultSet rs = ps.executeQuery();
 				if (rs != null) {
 					System.out.println("Recorded Symptoms Successfully");
@@ -560,36 +572,35 @@ public class Application {
 		// scale has no values.
 		if (!scaleValues.isEmpty()) {
 
-			String svscaleid = "100", svvalueid = "100X";
 			PreparedStatement ps = null;
 			String sql;
 			// Adding severity scale details
-			sql = "INSERT INTO mvg_svscaletable values ( ? , ? )";
+			sql = "INSERT INTO SEVERITY_SCALE(NAME) values (?)";
 			ps = conn.prepareStatement(sql);
-			ps.setString(1, svscaleid);
-			ps.setString(2, severityScaleName);
+			ps.setString(1, severityScaleName);
 			ResultSet rs = ps.executeQuery();
 
-			sql = "SELECT sv_scale_id from mvg_svscaletable WHERE sv_scale_id = ?";
+			sql = "SELECT SEVERITY_SCALE_ID from SEVERITY_SCALE WHERE NAME = ?";
 			ps = conn.prepareStatement(sql);
-			ps.setString(1, svscaleid);
+			ps.setString(1, severityScaleName);
+
 			ResultSet rs1 = ps.executeQuery();
 			String scaleid = null;
 			while (rs1.next()) {
-				scaleid = rs1.getString("sv_scale_id");
+				scaleid = rs1.getString("SEVERITY_SCALE_ID");
 			}
+
 			// Adding severity scale value details of the severity scale entered above.
-			sql = "INSERT INTO mvg_svvaluetable values(?,?,?,?)";
+			sql = "INSERT INTO SEVERITY_SCALE_VALUE(SCALE_VALUE, SEVERITY_SCALE_ID, SORT) values(?,?,?)";
 
 			Iterator<String> itr = scaleValues.iterator();
 			Iterator<String> ito = order.iterator();
 
 			while (itr.hasNext() && ito.hasNext()) {
 				ps = conn.prepareStatement(sql);
-				ps.setString(1, svvalueid);
-				ps.setString(2, itr.next());
-				ps.setString(3, scaleid);
-				ps.setString(4, ito.next());
+				ps.setString(1, itr.next());
+				ps.setString(2, scaleid);
+				ps.setString(3, ito.next());
 				rs = ps.executeQuery();
 			}
 
