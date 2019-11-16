@@ -54,7 +54,7 @@ public class Application {
 
 	static BodyPart dummyBodyPart = new BodyPart();
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws SQLException {
 
 		try {
 			Class.forName("oracle.jdbc.driver.OracleDriver");
@@ -77,9 +77,10 @@ public class Application {
 
 			displayHome();
 
-			conn.close();
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			conn.close();
 		}
 	}
 
@@ -94,6 +95,9 @@ public class Application {
 			facility.load(rs);
 			facilities.put(facility.getFacilityId(), facility);
 		}
+
+		stmt.close();
+		rs.close();
 	}
 
 	private static void loadSeverityScales() throws SQLException {
@@ -116,6 +120,9 @@ public class Application {
 			scaleValue.load(rs);
 			severityScaleValues.put(scaleValue.getSeverityValueId(), scaleValue);
 		}
+
+		stmt.close();
+		rs.close();
 	}
 
 	private static void loadSymptoms() throws SQLException {
@@ -126,6 +133,9 @@ public class Application {
 			symptom.load(rs, bodyParts, severityScales);
 			symptoms.put(symptom.getSymptomCode(), symptom);
 		}
+
+		stmt.close();
+		rs.close();
 	}
 
 	private static void loadBodyParts() throws Exception {
@@ -142,6 +152,9 @@ public class Application {
 				bodyParts.put(bodyPart.getBodyPartCode(), bodyPart);
 			}
 		}
+
+		stmt.close();
+		rs.close();
 	}
 
 	private static void loadRules() throws Exception {
@@ -161,6 +174,9 @@ public class Application {
 			rules.put(rule.getRuleId(), rule);
 		}
 
+		stmt.close();
+		rs.close();
+
 	}
 
 	private static int loadRuleSymptomsForIndex() throws Exception {
@@ -175,6 +191,9 @@ public class Application {
 			lastIndex = Math.max(lastIndex, ruleSym.getRuleSymptomId());
 		}
 
+		stmt.close();
+		rs.close();
+
 		return lastIndex;
 	}
 
@@ -186,6 +205,9 @@ public class Application {
 		while (rs.next()) {
 			lastIndex = Math.max(lastIndex, rs.getInt("rule_id"));
 		}
+
+		stmt.close();
+		rs.close();
 
 		return lastIndex;
 	}
@@ -205,6 +227,7 @@ public class Application {
 				break;
 			}
 		}
+
 		return choice;
 	}
 
@@ -225,6 +248,7 @@ public class Application {
 				break;
 			}
 		}
+
 		return choice;
 	}
 
@@ -455,6 +479,8 @@ public class Application {
 			staff = new Staff();
 			staff.load(rs);
 		}
+		ps.close();
+		rs.close();
 		return staff;
 	}
 
@@ -471,6 +497,10 @@ public class Application {
 			patient = new Patient();
 			patient.load(rs);
 		}
+
+		ps.close();
+		rs.close();
+
 		return patient;
 	}
 
@@ -594,6 +624,10 @@ public class Application {
 			report = new OutcomeReport();
 			report.load(rs);
 		}
+
+		ps.close();
+		rs.close();
+
 		return report;
 	}
 
@@ -700,6 +734,10 @@ public class Application {
 			checkIn = new CheckIn();
 			checkIn.load(rs);
 		}
+
+		ps.close();
+		rs.close();
+
 		return checkIn;
 	}
 
@@ -744,6 +782,10 @@ public class Application {
 		if (rs.next()) {
 			name = rs.getString("name");
 		}
+
+		ps.close();
+		rs.close();
+
 		return name;
 	}
 
@@ -895,7 +937,8 @@ public class Application {
 				} else {
 					System.out.println("Unable to record symptoms");
 				}
-
+				rs.close();
+				ps.close();
 			} else if (choice != 2) {
 				System.out.println("Invalid Option selected!");
 				continue;
@@ -1042,7 +1085,8 @@ public class Application {
 			}
 
 			System.out.println("Added new severity scale with values");
-
+			ps.close();
+			rs.close();
 		} else {
 			System.out.println("Cannot record a Severity Scale without any scale values!");
 		}
@@ -1196,9 +1240,9 @@ public class Application {
 			ps.setInt(2, symbolId);
 			rs = ps.executeQuery();
 
-//			rs.close();
-//			stmt.close();
-//			conn.close();
+			rs.close();
+			stmt.close();
+
 		} catch (Exception e) {
 			System.out.println("Error occured: " + e);
 
@@ -1257,6 +1301,8 @@ public class Application {
 			} else {
 				System.out.println("Entered Choice is not Valid");
 			}
+			stmt.close();
+			rs.close();
 		} catch (Exception e) {
 
 		}
@@ -1385,6 +1431,7 @@ public class Application {
 			ps.setInt(5, report.getReferralId());
 			ps.setInt(6, report.getFeedbackId());
 			ps.executeQuery();
+			ps.close();
 
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -1466,6 +1513,8 @@ public class Application {
 					stmt.setInt(1, referrerID);
 					stmt.setInt(2, facilityID);
 					stmt.executeUpdate();
+
+					stmt.close();
 				} else {
 					System.out.println("Facility ID must be entered before attempting to enter referrer ID.");
 					continue;
@@ -1494,6 +1543,8 @@ public class Application {
 						reasons.add(reason);
 						referral_id = reason.getReferralId();
 					}
+					ps.close();
+					rs.close();
 				}
 				// error message in case number of reasons is 4 already
 				else {
@@ -1546,6 +1597,7 @@ public class Application {
 				stmt.setString(4, name_of_service);
 				stmt.executeUpdate();
 
+				stmt.close();
 			} else if (choice1 == 2) {
 				break;
 			} else {
