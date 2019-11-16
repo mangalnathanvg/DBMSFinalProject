@@ -19,10 +19,13 @@ import java.util.Map;
 import beans.Address;
 import beans.BodyPart;
 import beans.CheckIn;
+import beans.Feedback;
 import beans.MedicalFacility;
+import beans.NegativeExperience;
 import beans.OutcomeReport;
 import beans.Patient;
 import beans.ReferralReason;
+import beans.ReferralStatus;
 import beans.Rule;
 import beans.RuleSymptom;
 import beans.SeverityScale;
@@ -475,9 +478,8 @@ public class Application {
 	private static void displayStaffMenu() throws Exception {
 		StringBuilder sb = null;
 		int choice = 0;
-		boolean flag = true;
 
-		while (flag) {
+		while (true) {
 			System.out.println("\n===| Staff Menu |===\n");
 
 			System.out.println("\nPlease choose one of the following options:\n");
@@ -487,18 +489,16 @@ public class Application {
 			sb.append("3. Add symptoms\n");
 			sb.append("4. Add severity scale\n");
 			sb.append("5. Add assessment rule\n");
-			sb.append("6 List of Treated patients\n");
-			sb.append("7. Go back\n");
+			sb.append("6. Go back\n");
 			System.out.println(sb.toString());
 
 			// TODO: check if medical staff, else show invalid privileges error
 
-			choice = Integer.parseInt(br.readLine());
+			choice = readNumber(1, 6);
 			if (choice == 1) {
 				staffProcessPatient();
 			} else if (choice == 2) {
-				// generate outcome report
-				staffCheckOutPatient();
+				treatedPatient();
 			} else if (choice == 3) {
 				addSymptoms();
 			} else if (choice == 4) {
@@ -506,23 +506,13 @@ public class Application {
 			} else if (choice == 5) {
 				addAssessmentRule();
 			} else if (choice == 6) {
-				treatedPatient();
-			} else if (choice == 7) {
 				break;
-			} else {
-				System.out.println("Invalid option! Please choose from the available options.");
-				continue;
 			}
-			flag = false;
 		}
 	}
 
 	private static void staffProcessPatient() {
 		System.out.println("Staff Process Patient Page");
-	}
-
-	private static void staffCheckOutPatient() {
-		System.out.println("Staff Checkout Patient Page");
 	}
 
 	private static void displayPatientRouting(int facilityId) throws Exception {
@@ -564,8 +554,47 @@ public class Application {
 		}
 	}
 
-	private static void displayPatientAcknowledgement(CheckIn checkin) {
+	private static void displayPatientAcknowledgement(CheckIn checkin) throws Exception {
+		System.out.println("\n===| Patient Acknowledgement |===\n");
+		OutcomeReport report = loadOutcomeReport(checkin.getCheckInId());
+		displayReport(report);
 
+		System.out.println("\nPlease choose one of the following options:\n");
+		StringBuilder sb = new StringBuilder();
+		sb.append("1. Yes\n");
+		sb.append("2. No\n");
+		sb.append("3. Go back\n");
+		System.out.println(sb.toString());
+
+		int choice = readNumber(1, 3);
+		while (true) {
+			if (choice == 1) {
+				report.setPatientConfirmation(1);
+				report.save(conn);
+			} else if (choice == 2) {
+				Feedback feedback = new Feedback();
+				System.out.println("Please enter some feedback:");
+				feedback.setDescription(readNonEmptyString());
+				feedback.insert(conn);
+				report.setFeedbackId(feedback.getFeedbackId());
+				report.save(conn);
+			} else if (choice == 3) {
+				break;
+			}
+		}
+	}
+
+	private static OutcomeReport loadOutcomeReport(int checkInId) throws SQLException {
+		OutcomeReport report = null;
+		String sql = "SELECT * FROM outcome_report r WHERE r.check_in_id = ?";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setInt(1, checkInId);
+		ResultSet rs = ps.executeQuery();
+		if (rs.next()) {
+			report = new OutcomeReport();
+			report.load(rs);
+		}
+		return report;
 	}
 
 	private static void displayPatientCheckIn(CheckIn checkin) throws Exception {
@@ -590,7 +619,7 @@ public class Application {
 					continue;
 				}
 				for (SymptomMetadata metadata : metadataList) {
-					metadata.save(conn);
+					metadata.insert(conn);
 				}
 				checkin.setStartTime(new Timestamp(System.currentTimeMillis()));
 				checkin.save(conn);
@@ -674,8 +703,48 @@ public class Application {
 		return checkIn;
 	}
 
-	private void displayReport(OutcomeReport report) {
+	private static void displayReport(OutcomeReport report) throws SQLException {
 		System.out.println("\n===| Outcome Report |===\n");
+		System.out.println("\nDischarge status: " + report.getDischargeStatusName());
+
+		if (report.isReferred()) {
+			ReferralStatus referralStatus = report.getReferralStatus(conn);
+			if (referralStatus != null) {
+				int facilityId = referralStatus.getFacilityId();
+				System.out.println("Facility name: " + facilities.get(facilityId).getName());
+				System.out.println("Referrer name: " + getReferrerName(referralStatus.getMedicalStaffId()));
+				ArrayList<ReferralReason> reasons = referralStatus.getReasons(conn);
+				if (reasons != null) {
+					System.out.println("Referral reasons:");
+					for (ReferralReason reason : reasons) {
+						System.out.println("Reason code: " + reason.getReasonCode());
+						System.out.println("Service name: " + reason.getServiceName());
+						System.out.println("Description: " + reason.getDescription());
+						System.out.println();
+					}
+				}
+			}
+
+			System.out.println("Treatment description: " + report.getTreatmentDescription());
+			NegativeExperience negativeExperience = report.getNegativeExperience(conn);
+			if (negativeExperience != null) {
+				System.out.println("\nNegative experience:");
+				System.out.println("Negative experience code: " + negativeExperience.getExperienceCodeName());
+				System.out.println("Description: " + negativeExperience.getDescription());
+			}
+		}
+	}
+
+	private static String getReferrerName(int medicalStaffId) throws SQLException {
+		String name = "";
+		String sql = "SELECT name FROM staff WHERE staff_id = ?";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setInt(1, medicalStaffId);
+		ResultSet rs = ps.executeQuery();
+		if (rs.next()) {
+			name = rs.getString("name");
+		}
+		return name;
 	}
 
 	// Mangal - Method to add new symptom to the database.
@@ -1148,6 +1217,7 @@ public class Application {
 			System.out.println("List of treated patients:\n");
 
 			Statement stmt = conn.createStatement();
+			// TODO need to check if already treated
 			ResultSet rs = stmt.executeQuery(
 					"SELECT p.patient_id, ci.check_in_id, p.first_name, p.last_name FROM treatment trm INNER JOIN check_in ci on trm.check_in_id = ci.check_in_id INNER JOIN patient p ON ci.patient_id=p.patient_id");
 			HashMap<Integer, Integer> treatedPatientList = new HashMap<>();
@@ -1174,7 +1244,7 @@ public class Application {
 					if (choice == 1) {
 						patientCheckout();
 					} else if (choice == 2) {
-
+						// TODO flag = false?
 					} else {
 						System.out.println("Enter valid choice");
 						flag = true;
@@ -1217,38 +1287,50 @@ public class Application {
 				if (choice == 1) {
 					report = dischargeStatus(report);
 					System.out.println("Discharge Status added successfully");
-					patientCheckout();
+//					patientCheckout();
 				} else if (choice == 2) {
 					report = referralStatus(report);
 				} else if (choice == 3) {
 					report = addTreatmentDescription(report);
 					System.out.println("Description added successfully");
-					patientCheckout();
+//					patientCheckout();
 				} else if (choice == 6) {
 					displayHome();
 				} else if (choice == 4) {
-					report = negativeExperience();
-					System.out.println("Negative Experince added successfully");
-					patientCheckout();
+					addNegativeExperience(report);
+//					patientCheckout();
 				} else if (choice == 5) {
 					report = patientConfirmation(report);
 					System.out.println("Patients Confirmation added successfully");
-					patientCheckout();
+//					patientCheckout();
 				} else if (choice == 7) {
-					submitReport(report);
-					System.out.println("Report submitted seccessfully");
-					flag = false;
-				} else {
-					System.out.println("Enter valid choice");
-					flag = true;
+					flag = displayStaffReportConfirmation(report);
+//					submitReport(report);
+//					System.out.println("Report submitted seccessfully");
+//					flag = false;
 				}
-
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
+	private static boolean displayStaffReportConfirmation(OutcomeReport report) throws Exception {
+		System.out.println("\nPlease choose one of the following options:\n");
+		StringBuilder sb = new StringBuilder();
+		sb.append("1. Confirm\n");
+		sb.append("2. Go back\n");
+		System.out.println(sb.toString());
+
+		int choice = readNumber(1, 2);
+		if (choice == 1) {
+			report.save(conn);
+			System.out.println("Report submitted successfully");
+		}
+		return (choice == 1);
+	}
+
+	// TODO: Remove this. Needs to be done by patient
 	private static OutcomeReport patientConfirmation(OutcomeReport report) {
 
 		StringBuilder sb = null;
@@ -1322,9 +1404,25 @@ public class Application {
 		return report;
 	}
 
-	private static OutcomeReport negativeExperience() {
-		return null;
-		// TODO Auto-generated method stub
+	private static void addNegativeExperience(OutcomeReport report) throws IOException {
+		System.out.println("\n===| Negative Experience |===\n");
+		System.out.println("\nPlease choose one of the following options:");
+		System.out.println("1. Misdiagnosis");
+		System.out.println("2. Patient acquired an infection during hospital stay");
+		int expCode = readNumber(1, 2);
+		System.out.println("Please enter a description:");
+		String description = readNonEmptyString();
+
+		System.out.println("\nPlease choose one of the following options:");
+		System.out.println("1. Confirm");
+		System.out.println("2. Go back");
+		int choice = readNumber(1, 2);
+		if (choice == 1) {
+			NegativeExperience negativeExperience = new NegativeExperience(expCode, description);
+			report.setNegativeExperience(negativeExperience);
+			System.out.println("Negative Experince added successfully");
+			// TODO haven't written to the db because not sure if it is at this point
+		}
 	}
 
 	private static OutcomeReport referralStatus(OutcomeReport report) throws Exception {

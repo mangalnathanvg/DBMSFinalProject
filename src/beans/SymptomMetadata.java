@@ -78,7 +78,7 @@ public class SymptomMetadata {
 		this.severityScaleValueId = severityScaleValueId;
 	}
 
-	public void save(Connection conn) throws SQLException {
+	public void insert(Connection conn) throws SQLException {
 		String sql = "INSERT INTO symptom_metadata(check_in_id,symptom_code,body_part_code,duration_days,severity_scale_value,"
 				+ "first_occurrence,cause,description) VALUES (?,?,?,?,?,?,?,?);";
 		PreparedStatement ps = conn.prepareStatement(sql);
