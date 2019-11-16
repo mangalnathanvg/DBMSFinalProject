@@ -22,6 +22,7 @@ import beans.CheckIn;
 import beans.MedicalFacility;
 import beans.OutcomeReport;
 import beans.Patient;
+import beans.ReferralReason;
 import beans.Rule;
 import beans.RuleSymptom;
 import beans.SeverityScale;
@@ -72,8 +73,6 @@ public class Application {
 			loadRules();
 
 			displayHome();
-
-			System.out.println("");
 
 			conn.close();
 		} catch (Exception e) {
@@ -370,8 +369,6 @@ public class Application {
 	private static void displaySignIn() throws Exception {
 		int choice = 0;
 		StringBuilder sb = null;
-
-		// TODO: Check if already signed in
 
 		while (true) {
 			System.out.println("\n===| Sign-in |===\n");
@@ -677,7 +674,7 @@ public class Application {
 		return checkIn;
 	}
 
-	private void displayReport(int checkInId) {
+	private void displayReport(OutcomeReport report) {
 		System.out.println("\n===| Outcome Report |===\n");
 	}
 
@@ -1222,7 +1219,7 @@ public class Application {
 					System.out.println("Discharge Status added successfully");
 					patientCheckout();
 				} else if (choice == 2) {
-					report = referralStatus();
+					report = referralStatus(report);
 				} else if (choice == 3) {
 					report = addTreatmentDescription(report);
 					System.out.println("Description added successfully");
@@ -1330,9 +1327,136 @@ public class Application {
 		// TODO Auto-generated method stub
 	}
 
-	private static OutcomeReport referralStatus() {
-		return null;
-		// TODO Auto-generated method stub
+	private static OutcomeReport referralStatus(OutcomeReport report) throws Exception {
+		boolean flag = true;
+		StringBuilder sb = new StringBuilder();
+		int choice = 0;
+		int facilityID = 0;
+		int referrerID = 0;
+		ArrayList<ReferralReason> reasons = new ArrayList<ReferralReason>();
+		int referral_reason_id = 0;
+		int reason_code = 0;
+		int referral_id = 0;
+		String description = null;
+		String name_of_service = null;
+
+		System.out.println("\n===| Referral Status |===\n");
+		System.out.println("\nPlease choose one of the following options:\n");
+
+		while (flag) {
+			sb.append("1. Enter Facility ID\n");
+			sb.append("2. Enter Referrer ID\n");
+			sb.append("3. Add reason\n");
+			sb.append("4. Go back\n");
+			System.out.println(sb.toString());
+
+			choice = Integer.parseInt(br.readLine());
+
+			if (choice == 1) {
+				System.out.println("\nPlease enter facility ID: ");
+				facilityID = Integer.parseInt(br.readLine());
+				continue;
+			} else if (choice == 2) {
+				if (facilityID != 0) {
+					System.out.println("\nPlease enter referrer ID: ");
+					referrerID = Integer.parseInt(br.readLine());
+
+					// record values in referral_status table
+					String sql = "INSERT INTO referral_status" + "(refID, facilityID) " + "values(?, ?)";
+					PreparedStatement stmt = conn.prepareStatement(sql);
+
+					stmt.setInt(1, referrerID);
+					stmt.setInt(2, facilityID);
+					stmt.executeUpdate();
+				} else {
+					System.out.println("Facility ID must be entered before attempting to enter referrer ID.");
+					continue;
+				}
+			} else if (choice == 3) {
+				// check if the number of associated reasons with the referral is less than or
+				// equal to 4
+				if (reasons.size() <= 4) {
+					referralReason(referrerID);
+					ReferralReason reason = null;
+
+					// get referral reasons already entered against current referral
+					String sql = "SELECT referral_reason_id, reason_code, description, referral_id, name_of_service FROM referral_reason rr LEFT JOIN referral_status rs WHERE rr.referral_id = rs.referral_id ";
+					PreparedStatement ps = conn.prepareStatement(sql);
+					ps.setInt(1, referral_reason_id);
+					ps.setInt(2, reason_code);
+					ps.setString(3, description);
+					ps.setInt(4, referral_id);
+					ps.setString(5, name_of_service);
+					ResultSet rs = ps.executeQuery();
+
+					// load reasons into list
+					if (rs.next()) {
+						reason = new ReferralReason();
+						reason.load(rs);
+						reasons.add(reason);
+						referral_id = reason.getReferralId();
+					}
+				}
+				// error message in case number of reasons is 4 already
+				else {
+					System.out.println("A referral cannot have more than 4 reasons associated with it.");
+					continue;
+				}
+			} else {
+				System.out.println("Invalid option. Please choose from the existing options.");
+				continue;
+			}
+			flag = false;
+		}
+		report.setReferralId(referral_id);
+		return report;
+
+	}
+
+	private static void referralReason(int referralID) throws Exception {
+		StringBuilder sb = new StringBuilder();
+		boolean flag = true;
+		int choice1 = 0;
+		int reason_code = 0;
+		String name_of_service = null;
+		String description = null;
+
+		System.out.println("\nPlease enter the following information:\n");
+		System.out.print("Reason code: ");
+		reason_code = Integer.parseInt(br.readLine());
+		System.out.print("\nName of service: ");
+		name_of_service = readNonEmptyString();
+		System.out.print("\nDescription: ");
+		description = readNonEmptyString();
+
+		while (flag) {
+			System.out.println("\n===| Referral Reason Menu |===\n");
+			sb.append("\n1. Record reason\n");
+			sb.append("2. Go back\n");
+			System.out.println(sb.toString());
+
+			choice1 = Integer.parseInt(br.readLine());
+
+			if (choice1 == 1) {
+				// record information in referral_reason table
+				String sql = "INSERT INTO referral_reason " + "(reason_code, description, referral_id, name_of_service)"
+						+ "values(?, ?, ?, ?)";
+				PreparedStatement stmt = conn.prepareStatement(sql);
+				stmt.setInt(1, reason_code);
+				stmt.setString(2, description);
+				stmt.setInt(3, referralID);
+				stmt.setString(4, name_of_service);
+				stmt.executeUpdate();
+
+			} else if (choice1 == 2) {
+				break;
+			} else {
+				System.out.println("\nInvalid option. Please choose one of the existing options.\n");
+				continue;
+			}
+			flag = false;
+		}
+
 	}
 
 	private static OutcomeReport dischargeStatus(OutcomeReport report) {
@@ -1342,7 +1466,7 @@ public class Application {
 		char status = 'N';
 
 		try {
-			System.out.println("List of treated patients:\n");
+			System.out.println("Discharge status:\n");
 			sb = new StringBuilder();
 			sb.append("1. Successful treatment\n");
 			sb.append("2. Deceased\n");
