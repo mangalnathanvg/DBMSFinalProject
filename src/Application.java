@@ -1172,7 +1172,7 @@ public class Application {
 	
 		while(flag) {
 			if (choice == 1) {
-				patientCheckout(selectedCheckInId);
+				patientCheckout();
 			}
 			else if (choice ==2) {
 				
@@ -1197,7 +1197,7 @@ public class Application {
 		}
 }
 
-	private static void patientCheckout(int selectedCheckInId) {
+	private static void patientCheckout() {
 		StringBuilder sb = null;
 		int choice = 0;
 		boolean flag = true;
@@ -1210,8 +1210,9 @@ public class Application {
 		sb.append("2. Referal Status\n");
 		sb.append("3. Treatment\n");
 		sb.append("4. Negative Experience\n");
-		sb.append("5. Go back\n");
-		sb.append("6. Submit\n");
+		sb.append("5. Patient Confirmation\n");
+		sb.append("6. Go back\n");
+		sb.append("7. Submit\n");
 		System.out.println(sb.toString());
 		choice = Integer.parseInt(br.readLine());
 		
@@ -1221,26 +1222,31 @@ public class Application {
 			if (choice == 1) {
 				report = dischargeStatus(report);
 				System.out.println("Discharge Status added successfully");
-				patientCheckout(selectedCheckInId);
+				patientCheckout();
 			}
 			else if (choice == 2) {
 				report = referralStatus();
 			}
 			else if (choice == 3) {
-				report = addTreatmentDescription(selectedCheckInId,report);
+				report = addTreatmentDescription(report);
 				System.out.println("Description added successfully");
-				patientCheckout(selectedCheckInId);
+				patientCheckout();
 			}
-			else if (choice == 5) {
+			else if (choice == 6) {
 				displayHome();
 			}
 			else if (choice == 4) {
 				report = negativeExperience();
 				System.out.println("Negative Experince added successfully");
-				patientCheckout(selectedCheckInId);
+				patientCheckout();
 			}
-			else if (choice == 6) {
-				submitReport(selectedCheckInId,report);
+			else if (choice == 5) {
+				report = patientConfirmation(report);
+				System.out.println("Patients Confirmation added successfully");
+				patientCheckout();
+			}
+			else if (choice == 7) {
+				submitReport(report);
 				System.out.println("Report submitted seccessfully");
 				flag = false;
 			}
@@ -1256,7 +1262,48 @@ public class Application {
 		}
 	}
 
-	private static void submitReport(int selectedCheckInId, OutcomeReport report) {
+	private static OutcomeReport patientConfirmation(OutcomeReport report) {
+		
+		StringBuilder sb = null;
+		int choice = 0;
+		boolean flag = true;
+		try {
+			System.out.println("Patient needs to provide confirmation!");
+			sb = new StringBuilder();
+			sb.append("1. Yes\n");
+			sb.append("2. No\n");
+			sb.append("3. Go back\n");
+			System.out.println(sb.toString());
+
+			choice = Integer.parseInt(br.readLine());
+			choice = readNumber(1, 3);
+			while(flag) {
+				
+				if(choice==1) {
+					report.setPatientConfirmation(1);
+					flag = false;
+				}
+				else if(choice==2) {
+					report.setPatientConfirmation(0);
+					flag = false;
+				}
+				else if(choice==3) {
+					flag = false;
+					patientCheckout();
+				}
+				else {
+					System.out.print("Choose valid options");
+					flag = true;
+				}
+			}
+		}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+		return report;
+	}
+
+	private static void submitReport(OutcomeReport report) {
 		
 		try {
 
@@ -1279,7 +1326,7 @@ public class Application {
 		}	
 	}
 
-	private static OutcomeReport addTreatmentDescription(int selectedCheckInId, OutcomeReport report) {
+	private static OutcomeReport addTreatmentDescription(OutcomeReport report) {
 		try {
 			
 			System.out.println("Enter treatment description for selected patient:\n");
@@ -1337,7 +1384,7 @@ public class Application {
 			}
 			else if(choice == 4) {
 				flag = false;
-				patientCheckout(0);
+				patientCheckout();
 			}
 			else {
 				System.out.println("Enter valid choice");
