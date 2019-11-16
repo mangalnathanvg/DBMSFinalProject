@@ -646,6 +646,10 @@ public class Application {
 		System.out.println("Add Assessment Rule Page");
 	}
 
+	private void displayReport(int checkInId) {
+		System.out.println("\n===| Outcome Report |===\n");
+	}
+
 	// Mangal - Method to add new symptom to the database.
 	private static void addSymptoms() throws Exception {
 
