@@ -1135,7 +1135,9 @@ public class Application {
 //			conn.close();
 		} catch (Exception e) {
 			System.out.println("Error occured: " + e);
+
 		}
+
 	}
 
 	private static void treatedPatient() {
@@ -1334,7 +1336,6 @@ public class Application {
 	}
 
 	private static OutcomeReport dischargeStatus(OutcomeReport report) {
-
 		StringBuilder sb = null;
 		int choice = 0;
 		boolean flag = true;
