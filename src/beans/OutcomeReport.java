@@ -8,6 +8,8 @@ public class OutcomeReport {
     private java.sql.Timestamp generationTime;
     private int referralId;
     private int feedbackId;
+    private int patientConfirmation;
+    
 	public int getReportId() {
 		return reportId;
 	}
@@ -43,6 +45,12 @@ public class OutcomeReport {
 	}
 	public void setFeedbackId(int feedbackId) {
 		this.feedbackId = feedbackId;
+	}
+	public int getPatientConfirmation() {
+		return patientConfirmation;
+	}
+	public void setPatientConfirmation(int patientConfirmation) {
+		this.patientConfirmation = patientConfirmation;
 	}
     
     

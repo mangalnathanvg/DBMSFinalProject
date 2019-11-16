@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -487,7 +488,8 @@ public class Application {
 			sb.append("3. Add symptoms\n");
 			sb.append("4. Add severity scale\n");
 			sb.append("5. Add assessment rule\n");
-			sb.append("6. Go back\n");
+			sb.append("6 List of Treated patients\n");
+			sb.append("7. Go back\n");
 			System.out.println(sb.toString());
 
 			// TODO: check if medical staff, else show invalid privileges error
@@ -505,6 +507,8 @@ public class Application {
 			} else if (choice == 5) {
 				addAssessmentRule();
 			} else if (choice == 6) {
+				treatedPatient();
+			} else if (choice == 7) {
 				break;
 			} else {
 				System.out.println("Invalid option! Please choose from the available options.");
@@ -1041,6 +1045,7 @@ public class Application {
 			}
 
 			int choice = Integer.parseInt(br.readLine());
+			choice = readNumber(1, counter);
 			String symptom_code = symptomList.get(choice).getSymptomCode();
 			String selectedBodyPart = symptomList.get(choice).getBodyPart().getBodyPartCode();
 
@@ -1070,14 +1075,37 @@ public class Application {
 			}
 			
 			choice = Integer.parseInt(br.readLine());
+			choice = readNumber(1, counter);
 			int selectedScaleValue = severityList.get(choice).getSeverityValueId();
 			
 
-			System.out.println("Enter Comparison Symbol");
-			char comparison = br.readLine().charAt(0);
+			System.out.println("Enter Comparison Symbol : < , > , =");
+			boolean isValid = true;
+			char comparison = 0 ;
+			while(isValid) {
+				comparison = br.readLine().charAt(0);
+				if (!Arrays.asList('>','<','=').contains(comparison))
+					{
+					System.out.println("Enter valid comparsion symbol < , > , =");
+					isValid = true;
+					}
+				else
+					isValid = false;
+				}
 			
-			System.out.println("Enter Priority");
-			char priority = br.readLine().charAt(0);
+			System.out.println("Enter Priority : H , L , Q");
+			isValid = true;
+			char priority = 0 ;
+			while(isValid) {
+				priority = br.readLine().charAt(0);
+				if (!Arrays.asList('H','L','Q').contains(priority))
+					{
+					System.out.println("Enter valid comparsion symbol H , L , Q");
+					isValid = true;
+					}
+				else
+					isValid = false;
+				}
 			
 			if(newRule) {
 			sql = "INSERT INTO rule(priority) values ( to_char(?) )";
@@ -1139,6 +1167,8 @@ public class Application {
 	
 		System.out.println(sb.toString());
 		choice = Integer.parseInt(br.readLine());
+		
+		choice = readNumber(1, 2);
 	
 		while(flag) {
 			if (choice == 1) {
@@ -1185,6 +1215,7 @@ public class Application {
 		System.out.println(sb.toString());
 		choice = Integer.parseInt(br.readLine());
 		
+		choice = readNumber(1, 6);
 		while(flag) {
 		
 			if (choice == 1) {
@@ -1231,16 +1262,17 @@ public class Application {
 
 		java.sql.Timestamp currentTimestamp = new java.sql.Timestamp(Calendar.getInstance().getTime().getTime());
 		
-		String sql = "INSERT INTO outcome_report(discharge_status,treatment_description, generation_time,referral_id,feedback_id) "
-				+ "values(to_char(?),?,?,?,?)";
+		String sql = "INSERT INTO outcome_report(discharge_status,treatment_description, patient_confirmation,generation_time,referral_id,feedback_id) "
+				+ "values(to_char(?),?,?,?,?,?)";
 		
 		PreparedStatement ps = conn.prepareStatement(sql);
 		ps.setInt(1, report.getDischargeStatus());
 		ps.setString(2, report.getTreatmentDescription());
-		ps.setTimestamp(3,currentTimestamp);
-		ps.setInt(4, report.getReferralId());
-		ps.setInt(5, report.getFeedbackId());
-//		ps.executeQuery();
+		ps.setInt(3,report.getPatientConfirmation());
+		ps.setTimestamp(4,currentTimestamp);
+		ps.setInt(5, report.getReferralId());
+		ps.setInt(6, report.getFeedbackId());
+		ps.executeQuery();
 		
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -1287,6 +1319,7 @@ public class Application {
 		System.out.println(sb.toString());
 		choice = Integer.parseInt(br.readLine());
 		
+		choice = readNumber(1, 4);
 		while(flag) {
 		
 			if (choice == 1) {
@@ -1308,6 +1341,7 @@ public class Application {
 			}
 			else {
 				System.out.println("Enter valid choice");
+				flag = true;
 			}
 			
 		}
