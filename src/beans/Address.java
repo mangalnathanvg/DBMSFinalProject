@@ -1,22 +1,36 @@
 package beans;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public class Address {
 
 	private int addressId;
-	private int addNumber;
-	private String state;
-	private String city;
+	private long addNumber;
 	private String streetName;
+	private String city;
+	private String state;
 	private String country;
 
-	public int getAddNumber() {
+	public Address(long addNumber, String streetName, String city, String state, String country) {
+		this.addNumber = addNumber;
+		this.streetName = streetName;
+		this.city = city;
+		this.state = state;
+		this.country = country;
+	}
+
+	public Address() {
+	}
+
+	public long getAddNumber() {
 		return addNumber;
 	}
 
-	public void setAddNumber(int addNumber) {
+	public void setAddNumber(long addNumber) {
 		this.addNumber = addNumber;
 	}
 
@@ -67,5 +81,21 @@ public class Address {
 		city = rs.getString("city");
 		streetName = rs.getString("street_name");
 		country = rs.getString("country");
+	}
+
+	public void save(Connection conn) throws SQLException {
+		String sql = "INSERT INTO address(add_number,street_name,city,state,country) VALUES (?,?,?,?,?);";
+		PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+		ps.setLong(1, addNumber);
+		ps.setString(2, streetName);
+		ps.setString(3, city);
+		ps.setString(4, state);
+		ps.setString(5, country);
+
+		ps.executeUpdate();
+		ResultSet rs = ps.getGeneratedKeys();
+		if (rs.next()) {
+			addressId = rs.getInt(1);
+		}
 	}
 }

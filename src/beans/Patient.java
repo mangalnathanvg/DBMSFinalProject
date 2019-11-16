@@ -1,7 +1,11 @@
 package beans;
 
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public class Patient {
 
@@ -12,6 +16,17 @@ public class Patient {
 	private long phoneNumber;
 
 	private Address address;
+
+	public Patient() {
+	}
+
+	public Patient(String firstName, String lastName, Date dateOfBirth, long phoneNumber, Address address) {
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.dateOfBirth = dateOfBirth;
+		this.phoneNumber = phoneNumber;
+		this.address = address;
+	}
 
 	public int getPatientId() {
 		return patientId;
@@ -69,6 +84,21 @@ public class Patient {
 		phoneNumber = rs.getLong("phone_number");
 		address = new Address();
 		address.load(rs);
+	}
+
+	public void save(Connection conn) throws SQLException {
+		String sql = "INSERT INTO patient(first_name,last_name,date_of_birth,phone_number,address_id) VALUES (?,?,?,?,?);";
+		PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+		ps.setString(1, firstName);
+		ps.setString(2, lastName);
+		ps.setDate(3, dateOfBirth);
+		ps.setLong(4, phoneNumber);
+		ps.setInt(5, address.getAddressId());
+		ps.executeUpdate();
+		ResultSet rs = ps.getGeneratedKeys();
+		if (rs.next()) {
+			patientId = rs.getInt(1);
+		}
 	}
 
 }

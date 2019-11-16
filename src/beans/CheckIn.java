@@ -1,8 +1,10 @@
 package beans;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 
 public class CheckIn {
@@ -88,8 +90,18 @@ public class CheckIn {
 		treatment.load(rs);
 	}
 
-	public void save(Connection conn) {
-
+	public void save(Connection conn) throws SQLException {
+		String sql = "INSERT INTO check_in(start_time,end_time,priority,patient_id,facility_id) VALUES (?,?,?,?,?);";
+		PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+		ps.setTimestamp(1, startTime);
+		ps.setTimestamp(2, endTime);
+		ps.setInt(3, priority);
+		ps.setInt(4, patientId);
+		ps.setInt(5, facilityId);
+		ps.executeUpdate();
+		ResultSet rs = ps.getGeneratedKeys();
+		if (rs.next()) {
+			checkInId = rs.getInt(1);
+		}
 	}
-
 }

@@ -48,6 +48,10 @@ public class Symptom {
 		this.severityScale = severityScale;
 	}
 
+	public boolean hasBodyPart() {
+		return bodyPart == null;
+	}
+
 	public void load(ResultSet rs, HashMap<String, BodyPart> bodyParts, HashMap<Integer, SeverityScale> severityScales)
 			throws SQLException {
 		symptomCode = rs.getString("symptom_code");

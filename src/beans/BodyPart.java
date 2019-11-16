@@ -4,6 +4,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class BodyPart {
+	public static final String DUMMY_BODY_PART_CODE = "DUMMY_BP";
+
 	private String bodyPartCode;
 	private String name;
 
