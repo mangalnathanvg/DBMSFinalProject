@@ -93,6 +93,11 @@ public class OutcomeReport {
 		return name;
 	}
 
+	public void setReferralStatus(ReferralStatus referralStatus) {
+		this.referralStatus = referralStatus;
+
+	}
+
 	public ReferralStatus getReferralStatus(Connection conn) throws SQLException {
 		if (referralStatus == null) {
 			String sql = "SELECT * FROM referral_status WHERE referral_id = ?";
