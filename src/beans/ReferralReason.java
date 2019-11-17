@@ -1,5 +1,7 @@
 package beans;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -59,4 +61,16 @@ public class ReferralReason {
 		serviceName = rs.getString("name_of_service");
 	}
 
+	public void insert(Connection conn) throws SQLException {
+		String sql = "INSERT INTO referral_reason " + "(reason_code, description, referral_id, name_of_service)"
+				+ "values(?, ?, ?, ?)";
+		PreparedStatement stmt = conn.prepareStatement(sql);
+		stmt.setInt(1, reasonCode);
+		stmt.setString(2, description);
+		stmt.setInt(3, referralReasonId);
+		stmt.setString(4, serviceName);
+		stmt.executeUpdate();
+
+		stmt.close();
+	}
 }

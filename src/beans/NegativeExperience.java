@@ -1,5 +1,7 @@
 package beans;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -55,4 +57,15 @@ public class NegativeExperience {
 		experienceCode = rs.getInt("experience_code");
 		description = rs.getString("description");
 	}
+
+	public void insert(Connection conn) throws SQLException {
+		String sql = "INSERT INTO negative_experience(report_id,experience_code,description) VALUES (?,?,?);";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setInt(1, reportId);
+		ps.setInt(2, experienceCode);
+		ps.setString(3, description);
+
+		ps.executeUpdate();
+	}
+
 }
