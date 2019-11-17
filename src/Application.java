@@ -312,12 +312,10 @@ public class Application {
 			sb.append("1. Sign-in\n");
 			sb.append("2. Sign-up (patient)\n");
 			sb.append("3. Demo queries\n");
-			sb.append("5. Add Symptoms\n");
-			sb.append("6. Add Severity Scale\n");
-			sb.append("7. Exit\n");
+			sb.append("4. Exit\n");
 			System.out.println(sb.toString());
 
-			choice = readNumber(1, 7);
+			choice = readNumber(1, 4);
 
 			if (choice == 1) {
 				displaySignIn();
@@ -325,11 +323,7 @@ public class Application {
 				displaySignUp();
 			} else if (choice == 3) {
 				displayDemoQueries();
-			} else if (choice == 5) {
-				addSymptoms();
-			} else if (choice == 6) {
-				addSeverityScale();
-			} else if (choice == 7) {
+			} else if (choice == 4) {
 				break;
 			}
 		}
@@ -344,60 +338,57 @@ public class Application {
 		int choice = 0;
 		StringBuilder sb = null;
 
-		while (true) {
-			System.out.println("\n===| Sign-Up (Patient) |===\n");
+		System.out.println("\n===| Sign-Up (Patient) |===\n");
 
-			System.out.println("Please enter the details of the Patient as prompted");
-			System.out.println("\nFirst name: ");
-			String fname = readNonEmptyString();
+		System.out.println("Please enter the details of the Patient as prompted");
+		System.out.println("\nFirst name: ");
+		String fname = readNonEmptyString();
 
-			System.out.println("\nLast name: ");
-			String lname = readNonEmptyString();
+		System.out.println("\nLast name: ");
+		String lname = readNonEmptyString();
 
-			System.out.println("\nPhone number (e.g. 9999999999): ");
-			long phone = readLong(10);
+		System.out.println("\nPhone number (e.g. 9999999999): ");
+		long phone = readLong(10);
 
-			System.out.println("Date of birth (YYYY-MM-DD):");
-			Date dateOfBirth = readDate();
+		System.out.println("Date of birth (YYYY-MM-DD):");
+		Date dateOfBirth = readDate();
 
-			System.out.println("\nPlease enter the details of the Address as prompted");
-			System.out.println("\nAddress number: ");
-			long addNumber = readLong(10);
+		System.out.println("\nPlease enter the details of the Address as prompted");
+		System.out.println("\nAddress number: ");
+		long addNumber = readLong(10);
 
-			System.out.println("Street: ");
-			String street = readNonEmptyString();
+		System.out.println("Street: ");
+		String street = readNonEmptyString();
 
-			System.out.println("city: ");
-			String city = readNonEmptyString();
+		System.out.println("city: ");
+		String city = readNonEmptyString();
 
-			System.out.println("State: ");
-			String state = readNonEmptyString();
+		System.out.println("State: ");
+		String state = readNonEmptyString();
 
-			System.out.println("Country: ");
-			String country = readNonEmptyString();
+		System.out.println("Country: ");
+		String country = readNonEmptyString();
 
-			System.out.println("\nPlease choose from the below options:");
-			sb = new StringBuilder();
-			sb.append("1. Sign-up\n");
-			sb.append("2. Go back\n");
-			System.out.println(sb.toString());
+		System.out.println("\nPlease choose from the below options:");
+		sb = new StringBuilder();
+		sb.append("1. Sign-up\n");
+		sb.append("2. Go back\n");
+		System.out.println(sb.toString());
 
-			choice = readNumber(1, 2);
-			if (choice == 1) {
-				Address address = new Address(addNumber, street, city, state, country);
-				address.save(conn);
-				Patient patient = new Patient(fname, lname, dateOfBirth, phone, address);
-				patient.save(conn);
-			} else if (choice == 2) {
-				break;
-			}
-
+		choice = readNumber(1, 2);
+		if (choice == 1) {
+			Address address = new Address(addNumber, street, city, state, country);
+			address.save(conn);
+			Patient patient = new Patient(fname, lname, dateOfBirth, phone, address);
+			patient.save(conn);
+			// TODO display message
 		}
 	}
 
 	private static void displaySignIn() throws Exception {
 		int choice = 0;
 		StringBuilder sb = null;
+		// TODO null cehckedIn people
 
 		while (true) {
 			System.out.println("\n===| Sign-in |===\n");
@@ -446,13 +437,12 @@ public class Application {
 					if (checkedInPatient != null) {
 						System.out.println("\nLogged in successfully.\n");
 						displayPatientRouting(facilityId);
-
 					}
 				} else {
-					System.out.println("\nLogged in successfully.\n");
 					checkedInStaff = loadStaff(name, dateOfBirth, city, facilityId);
 					if (checkedInStaff != null && checkedInStaff.isMedical()) {
-						displayStaffMenu(checkedInStaff, checkedInPatient);
+						System.out.println("\nLogged in successfully.\n");
+						displayStaffMenu();
 					}
 				}
 				if (checkedInPatient == null && checkedInStaff == null) {
@@ -507,7 +497,7 @@ public class Application {
 	}
 
 	// Devi - Method to display Staff Menu.
-	private static void displayStaffMenu(Staff staff, Patient patient) throws Exception {
+	private static void displayStaffMenu() throws Exception {
 		StringBuilder sb = null;
 		int choice = 0;
 
@@ -740,20 +730,16 @@ public class Application {
 		System.out.println(sb.toString());
 
 		int choice = readNumber(1, 3);
-		while (true) {
-			if (choice == 1) {
-				report.setPatientConfirmation(1);
-				report.save(conn);
-			} else if (choice == 2) {
-				Feedback feedback = new Feedback();
-				System.out.println("Please enter some feedback:");
-				feedback.setDescription(readNonEmptyString());
-				feedback.insert(conn);
-				report.setFeedbackId(feedback.getFeedbackId());
-				report.save(conn);
-			} else if (choice == 3) {
-				break;
-			}
+		if (choice == 1) {
+			report.setPatientConfirmation(1);
+			report.save(conn);
+		} else if (choice == 2) {
+			Feedback feedback = new Feedback();
+			System.out.println("Please enter some feedback:");
+			feedback.setDescription(readNonEmptyString());
+			feedback.insert(conn);
+			report.setFeedbackId(feedback.getFeedbackId());
+			report.save(conn);
 		}
 	}
 
@@ -869,7 +855,8 @@ public class Application {
 		CheckIn checkIn = null;
 		String sql = "SELECT * FROM (SELECT * FROM check_in c INNER JOIN patient p ON c.patient_id = p.patient_id "
 				+ "INNER JOIN medical_facility m ON m.facility_id = c.facility_id LEFT JOIN vital_signs v ON v.check_in_id = v.check_in_id "
-				+ "LEFT JOIN treatment t ON t.check_in_id = c.check_in_id WHERE c.patient_id = ? AND m.facility_id = ? AND t.treatment_time is null) WHERE ROWNUM = 1";
+				+ "LEFT JOIN outcome_report r ON r.check_in_id = c.check_in_id LEFT JOIN treatment t ON t.check_in_id = c.check_in_id "
+				+ "WHERE c.patient_id = ? AND m.facility_id = ? AND r.patient_confirmation IS NULL) WHERE ROWNUM = 1";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		ps.setInt(1, patientId);
 		ResultSet rs = ps.executeQuery();
