@@ -11,7 +11,6 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -381,14 +380,15 @@ public class Application {
 			address.save(conn);
 			Patient patient = new Patient(fname, lname, dateOfBirth, phone, address);
 			patient.save(conn);
-			// TODO display message
+			System.out.println("Patient has successfully been added.");
 		}
 	}
 
 	private static void displaySignIn() throws Exception {
 		int choice = 0;
 		StringBuilder sb = null;
-		// TODO null cehckedIn people
+		checkedInPatient = null;
+		checkedInStaff = null;
 
 		while (true) {
 			System.out.println("\n===| Sign-in |===\n");
@@ -432,8 +432,6 @@ public class Application {
 			if (choice == 1) {
 				if (isPatient) {
 					checkedInPatient = loadPatient(name, dateOfBirth, city);
-					// TODO : load check in to see if returning to do feedback, else create new
-					// check in with facilityId
 					if (checkedInPatient != null) {
 						System.out.println("\nLogged in successfully.\n");
 						displayPatientRouting(facilityId);
@@ -637,8 +635,6 @@ public class Application {
 			vitalSigns.save(conn);
 
 			System.out.println("Priority assigned: " + stampPriority(checkIn));
-
-			// go back
 		}
 	}
 
@@ -653,20 +649,62 @@ public class Application {
 		}
 		checkIn.setPriority(priority);
 		checkIn.save(conn);
-		return "";
+		return getPriorityName(priority);
+	}
+
+	private static String getPriorityName(char priority) {
+		String name = "";
+		switch (priority) {
+		case 'H':
+			name = "High";
+			break;
+		case 'Q':
+			name = "Quarantine";
+			break;
+		case 'N':
+			name = "Normal";
+			break;
+		}
+		return name;
 	}
 
 	private static boolean assessRule(ArrayList<SymptomMetadata> metadata, Rule rule) {
+		int count = 0;
 		for (RuleSymptom ruleSymptom : rule.getRuleSymptoms()) {
 			for (SymptomMetadata metadatum : metadata) {
 				if (!metadatum.getSymptomCode().equals(ruleSymptom.getSymptom().getSymptomCode())) {
 					continue;
 				} else if (!metadatum.getBodyPartCode().equals(ruleSymptom.getBodyPart().getBodyPartCode())) {
 					continue;
+				} else {
+					count++;
+					SeverityScaleValue scaleValue = severityScaleValues.get(metadatum.getSeverityScaleValueId());
+					char symbol = ruleSymptom.getComparisonSymbol();
+					boolean pass = false;
+					switch (symbol) {
+					case '<':
+						if (scaleValue.getSort() < ruleSymptom.getScaleValue().getSort()) {
+							pass = true;
+						}
+						break;
+					case '>':
+						if (scaleValue.getSort() > ruleSymptom.getScaleValue().getSort()) {
+							pass = true;
+						}
+						break;
+					case '=':
+						if (scaleValue.getSort() == ruleSymptom.getScaleValue().getSort()) {
+							pass = true;
+						}
+						break;
+					}
+					if (!pass) {
+						return false;
+					}
 				}
 			}
 		}
-		return true;
+		return (count == rule.getRuleSymptoms().size());
 	}
 
 	private static char maxPriority(char p1, char p2) {
@@ -693,7 +731,6 @@ public class Application {
 			int choice = 0;
 			while (true) {
 				choice = readNumber(1, 3);
-				// TODO : verify logic
 				if (choice == 2 && (checkinUnderProcess == null
 						|| checkinUnderProcess.getTreatment().getTreatmentTime() == null)) {
 					System.out.println("Cannot checkout without being treated.");
@@ -1223,39 +1260,34 @@ public class Application {
 		}
 	}
 
-	private static void addAssessmentRule() {
+	private static void addAssessmentRule() throws Exception {
 		int choice = 0;
 		int ruleCount = 0;
 		boolean flag = true;
 		StringBuilder sb = null;
-		try {
-			while (flag) {
-				System.out.println("\nPlease choose one of the following options:\n");
-				sb = new StringBuilder();
-				sb.append("1. want to add more conditions in current Rule \n");
-				sb.append("2. go back\n");
-				System.out.println(sb.toString());
+		while (flag) {
+			System.out.println("\nPlease choose one of the following options:\n");
+			sb = new StringBuilder();
+			sb.append("1. want to add more conditions in current Rule \n");
+			sb.append("2. go back\n");
+			System.out.println(sb.toString());
 
-				choice = Integer.parseInt(br.readLine());
-				if (choice == 1) {
-					if (ruleCount > 0)
-						addRuleCondition(false, true);
-					else
-						addRuleCondition(true, true);
-					System.out.println("Condition successfully added!");
-				}
-
-				else if (choice == 2) {
-					displayHome();
-				} else {
-					System.out.println("Invalid option! Please choose from the available options.");
-					continue;
-				}
-				ruleCount++;
+			choice = Integer.parseInt(br.readLine());
+			if (choice == 1) {
+				if (ruleCount > 0)
+					addRuleCondition(false, true);
+				else
+					addRuleCondition(true, true);
+				System.out.println("Condition successfully added!");
 			}
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+
+			else if (choice == 2) {
+				displayHome();
+			} else {
+				System.out.println("Invalid option! Please choose from the available options.");
+				continue;
+			}
+			ruleCount++;
 		}
 	}
 
@@ -1543,30 +1575,6 @@ public class Application {
 			e.printStackTrace();
 		}
 		return report;
-	}
-
-	private static void submitReport(OutcomeReport report) {
-
-		try {
-
-			java.sql.Timestamp currentTimestamp = new java.sql.Timestamp(Calendar.getInstance().getTime().getTime());
-
-			String sql = "INSERT INTO outcome_report(discharge_status,treatment_description, patient_confirmation,generation_time,referral_id,feedback_id) "
-					+ "values(to_char(?),?,?,?,?,?)";
-
-			PreparedStatement ps = conn.prepareStatement(sql);
-			ps.setInt(1, report.getDischargeStatus());
-			ps.setString(2, report.getTreatmentDescription());
-			ps.setInt(3, report.getPatientConfirmation());
-			ps.setTimestamp(4, currentTimestamp);
-			ps.setInt(5, report.getReferralId());
-			ps.setInt(6, report.getFeedbackId());
-			ps.executeQuery();
-			ps.close();
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
 	}
 
 	private static OutcomeReport addTreatmentDescription(OutcomeReport report) {
