@@ -974,11 +974,12 @@ public class Application {
 		// Displaying previously added scale values.
 		while (flag) {
 			if (!scaleValues.isEmpty()) {
-				System.out.println("Current scale values with order for " + severityScaleName + ": ");
+				System.out.println("Current scale values with order (Higher the number, greater the severity) for "
+						+ severityScaleName + ": ");
 				Iterator<String> itr = scaleValues.iterator();
 				Iterator<String> ito = order.iterator();
 				while (itr.hasNext() && ito.hasNext()) {
-					System.out.println("Rank " + ito.next() + " - " + itr.next());
+					System.out.println(ito.next() + " - " + itr.next());
 				}
 			}
 
