@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 
 public class CheckIn {
 	private int checkInId;
@@ -17,7 +18,8 @@ public class CheckIn {
 
 	private VitalSigns vitalSigns;
 	private Treatment treatment;
-	private SymptomMetadata metadata;
+	private ArrayList<SymptomMetadata> metadata;
+	private Patient patient;
 
 	public int getCheckInId() {
 		return checkInId;
@@ -75,7 +77,28 @@ public class CheckIn {
 		this.facilityId = facilityId;
 	}
 
-	public void load(ResultSet rs) throws SQLException {
+	public Patient getPatient() {
+		return patient;
+	}
+
+	public ArrayList<SymptomMetadata> getSymptomMetadata(Connection conn) throws SQLException {
+		if (metadata == null) {
+			String sql = "SELECT * from symptom_metadata where check_in_id = ?";
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setInt(1, checkInId);
+			ps.executeQuery();
+			ResultSet rs = ps.getResultSet();
+			while (rs.next()) {
+				SymptomMetadata symptomMetadata = new SymptomMetadata();
+				symptomMetadata.load(rs);
+			}
+			rs.close();
+			ps.close();
+		}
+		return metadata;
+	}
+
+	public void load(ResultSet rs, boolean loadPatient) throws SQLException {
 		checkInId = rs.getInt("check_in_id");
 		patientId = rs.getInt("patient_id");
 		facilityId = rs.getInt("facility_id");
@@ -88,6 +111,11 @@ public class CheckIn {
 
 		treatment = new Treatment();
 		treatment.load(rs);
+
+		if (loadPatient) {
+			patient = new Patient();
+			patient.load(rs, false);
+		}
 	}
 
 	public void save(Connection conn) throws SQLException {

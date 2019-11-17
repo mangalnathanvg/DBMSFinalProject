@@ -2,9 +2,11 @@ package beans;
 
 import java.sql.Connection;
 import java.sql.Date;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 
 public class Staff {
 
@@ -92,4 +94,21 @@ public class Staff {
 		hireDate = rs.getDate("hire_date");
 	}
 
+	public ArrayList<String> getTreatableBodyParts(Connection conn) throws SQLException {
+		ArrayList<String> bodyPartCodes = new ArrayList<String>();
+		String sql = "SELECT body_part_code FROM department_speciality ds INNER JOIN service_department sd on sd.department_code = ds.department_code "
+				+ "INNER JOIN medical_staff ms on ms.primary_department_code = sd.department_code WHERE ms.medical_staff_id = ? "
+				+ "UNION SELECT body_part_code FROM department_speciality ds INNER JOIN service_department sd on sd.department_code = ds.department_code "
+				+ "INNER JOIN secondary_medical_department smd ON smd.medical_service_dept_code = ds.department_code WHERE smd.medical_staff_id = ?";
+
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setInt(1, staffId);
+		ps.setInt(2, staffId);
+		ps.executeQuery();
+		ResultSet rs = ps.getResultSet();
+		while (rs.next()) {
+			bodyPartCodes.add(rs.getString("body_part_code"));
+		}
+		return bodyPartCodes;
+	}
 }

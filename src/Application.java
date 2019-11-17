@@ -33,6 +33,8 @@ import beans.SeverityScaleValue;
 import beans.Staff;
 import beans.Symptom;
 import beans.SymptomMetadata;
+import beans.Treatment;
+import beans.VitalSigns;
 
 public class Application {
 
@@ -426,7 +428,7 @@ public class Application {
 					System.out.println("\nLogged in successfully.\n");
 					checkedInStaff = loadStaff(name, dateOfBirth, city, facilityId);
 					if (checkedInStaff != null && checkedInStaff.isMedical()) {
-						displayStaffMenu();
+						displayStaffMenu(checkedInStaff, checkedInPatient);
 					}
 				}
 				if (checkedInPatient == null && checkedInStaff == null) {
@@ -469,13 +471,13 @@ public class Application {
 		ResultSet rs = ps.executeQuery();
 		if (rs.next()) {
 			patient = new Patient();
-			patient.load(rs);
+			patient.load(rs, true);
 		}
 		return patient;
 	}
 
 	// Devi - Method to display Staff Menu.
-	private static void displayStaffMenu() throws Exception {
+	private static void displayStaffMenu(Staff staff, Patient patient) throws Exception {
 		StringBuilder sb = null;
 		int choice = 0;
 
@@ -506,13 +508,154 @@ public class Application {
 			} else if (choice == 5) {
 				addAssessmentRule();
 			} else if (choice == 6) {
+				System.out.println("Invalid choice.\n");
 				break;
 			}
 		}
 	}
 
-	private static void staffProcessPatient() {
-		System.out.println("Staff Process Patient Page");
+	private static void staffProcessPatient() throws Exception {
+		StringBuilder sb = null;
+		int choice = 0;
+
+		int counter = 0;
+		CheckIn selectedCheckIn = null;
+
+		// Display list of patients who have finished self check-in
+		String sql = "SELECT C.check_in_id, P.first_name, P.last_name, P.date_of_birth, P.phone_number, C.start_time FROM check_in C INNER JOIN patient P "
+				+ "ON P.patient_id = C.patient_id LEFT JOIN treatment t ON t.check_in_id = c.check_in_id LEFT JOIN vital_signs v ON  v.check_in_id = c.check_in_id WHERE t.check_in_id IS NULL AND c.facility_id = ?";
+
+		PreparedStatement stmt = conn.prepareStatement(sql);
+		ResultSet rs = stmt.executeQuery(sql);
+		stmt.setInt(1, checkedInStaff.getPrimaryDepartment(conn).getFacilityId());
+		System.out.println("List of checked-in patients:\n");
+
+		HashMap<Integer, CheckIn> checkedInPatientList = new HashMap<>();
+		while (rs.next()) {
+			CheckIn checkIn = new CheckIn();
+			checkIn.load(rs, true);
+			System.out.println(counter++ + ". " + checkIn.getPatient().getFullName());
+			checkedInPatientList.put(counter, checkIn);
+		}
+		if (counter > 0) {
+			System.out.println("Choose patient from the list");
+			choice = readNumber(1, checkedInPatientList.size());
+			selectedCheckIn = checkedInPatientList.get(choice);
+			sb = new StringBuilder();
+			sb.append("1. Enter Vitals\n");
+			sb.append("2. Treat Patient\n");
+			sb.append("3. Go back\n");
+
+			System.out.println(sb.toString());
+			choice = Integer.parseInt(br.readLine());
+
+			choice = readNumber(1, 2);
+
+			while (true) {
+				if (choice == 1) {
+					if (selectedCheckIn.getVitalSigns().getCheckInID() != 0) {
+						staffEnterVitals(selectedCheckIn);
+					} else {
+						System.out.println("Vitals already entered for patient.");
+					}
+				} else if (choice == 2) {
+					boolean treatable = false;
+					ArrayList<String> treatableBodyParts = checkedInStaff.getTreatableBodyParts(conn);
+					ArrayList<SymptomMetadata> metadata = selectedCheckIn.getSymptomMetadata(conn);
+					for (SymptomMetadata metadatum : metadata) {
+						if (treatableBodyParts.contains(metadatum.getBodyPartCode())) {
+							treatable = true;
+							break;
+						}
+					}
+					if (treatable) {
+						treatPatient(selectedCheckIn);
+						break;
+					} else {
+						System.out.println("Inadequate privileges.\n");
+					}
+				} else if (choice == 3) {
+					break;
+				}
+			}
+		} else {
+			System.out.println("List has no Patients to show");
+		}
+	}
+
+	private static void treatPatient(CheckIn checkIn) throws SQLException {
+		Treatment treatment = new Treatment();
+		treatment.setCheckInId(checkIn.getCheckInId());
+		treatment.setMedicalStaffId(checkedInStaff.getStaffId());
+		treatment.setTreatmentTime(new Timestamp(System.currentTimeMillis()));
+		treatment.insert(conn);
+	}
+
+	private static void staffEnterVitals(CheckIn checkIn) throws Exception {
+		StringBuilder sb = new StringBuilder();
+		System.out.println("Please enter the following details as prompted:\n");
+		System.out.print("Temperature: ");
+		int temp = readNumber(1, 110);
+		System.out.print("\nSystolic Pressure: ");
+		int systolic = readNumber(60, 200);
+		System.out.print("\nDiastolic Pressure: ");
+		int diastolic = readNumber(30, 110);
+
+		// end time for check-in process
+		System.out.println("\nMenu:\n");
+		sb.append("1. Record\n");
+		sb.append("2. Go Back\n");
+		System.out.println(sb.toString());
+
+		int choice = readNumber(1, 2);
+		if (choice == 1) {
+			checkIn.setEndTime(new Timestamp(System.currentTimeMillis()));
+			checkIn.save(conn);
+
+			VitalSigns vitalSigns = new VitalSigns(checkIn.getCheckInId(), checkedInStaff.getStaffId(), temp, systolic,
+					diastolic);
+			vitalSigns.save(conn);
+
+			System.out.println("Priority assigned: " + stampPriority(checkIn));
+
+			// go back
+		}
+	}
+
+	private static String stampPriority(CheckIn checkIn) throws SQLException {
+		ArrayList<SymptomMetadata> metadata = checkIn.getSymptomMetadata(conn);
+		char priority = 'N';
+		for (Rule rule : rules.values()) {
+			boolean verified = assessRule(metadata, rule);
+			if (verified) {
+				priority = maxPriority(priority, rule.getPriority());
+			}
+		}
+		checkIn.setPriority(priority);
+		checkIn.save(conn);
+		return "";
+	}
+
+	private static boolean assessRule(ArrayList<SymptomMetadata> metadata, Rule rule) {
+		for (RuleSymptom ruleSymptom : rule.getRuleSymptoms()) {
+			for (SymptomMetadata metadatum : metadata) {
+				if (!metadatum.getSymptomCode().equals(ruleSymptom.getSymptom().getSymptomCode())) {
+					continue;
+				} else if (!metadatum.getBodyPartCode().equals(ruleSymptom.getBodyPart().getBodyPartCode())) {
+					continue;
+				}
+			}
+		}
+		return true;
+	}
+
+	private static char maxPriority(char p1, char p2) {
+		if (p1 == 'Q' || p2 == 'Q') {
+			return 'Q';
+		} else if (p1 == 'H' || p2 == 'H') {
+			return 'H';
+		}
+		return 'N';
 	}
 
 	private static void displayPatientRouting(int facilityId) throws Exception {
@@ -698,7 +841,7 @@ public class Application {
 		ResultSet rs = ps.executeQuery();
 		if (rs.next()) {
 			checkIn = new CheckIn();
-			checkIn.load(rs);
+			checkIn.load(rs, false);
 		}
 		return checkIn;
 	}
@@ -1438,6 +1581,9 @@ public class Application {
 		String description = null;
 		String name_of_service = null;
 
+		ReferralStatus referralStatus = new ReferralStatus();
+		referralStatus.setReferralId(report.getReferralId());
+
 		System.out.println("\n===| Referral Status |===\n");
 		System.out.println("\nPlease choose one of the following options:\n");
 
@@ -1451,13 +1597,16 @@ public class Application {
 			choice = Integer.parseInt(br.readLine());
 
 			if (choice == 1) {
-				System.out.println("\nPlease enter facility ID: ");
+				System.out.println("\nPlease enter facility ID (Enter 0 if there is no specific facility): ");
 				facilityID = Integer.parseInt(br.readLine());
+				referralStatus.setFacilityId(facilityID);
 				continue;
+
 			} else if (choice == 2) {
 				if (facilityID != 0) {
 					System.out.println("\nPlease enter referrer ID: ");
 					referrerID = Integer.parseInt(br.readLine());
+					referralStatus.setMedicalStaffId(referrerID);
 
 					// record values in referral_status table
 					String sql = "INSERT INTO referral_status" + "(refID, facilityID) " + "values(?, ?)";
@@ -1474,26 +1623,21 @@ public class Application {
 				// check if the number of associated reasons with the referral is less than or
 				// equal to 4
 				if (reasons.size() <= 4) {
-					referralReason(referrerID);
-					ReferralReason reason = null;
+					ReferralReason reason = new ReferralReason();
+					reason.setReferralId(referralStatus.getReferralId());
+					reasons.add(referralReason(reason));
 
-					// get referral reasons already entered against current referral
-					String sql = "SELECT referral_reason_id, reason_code, description, referral_id, name_of_service FROM referral_reason rr LEFT JOIN referral_status rs WHERE rr.referral_id = rs.referral_id ";
-					PreparedStatement ps = conn.prepareStatement(sql);
-					ps.setInt(1, referral_reason_id);
-					ps.setInt(2, reason_code);
-					ps.setString(3, description);
-					ps.setInt(4, referral_id);
-					ps.setString(5, name_of_service);
-					ResultSet rs = ps.executeQuery();
-
-					// load reasons into list
-					if (rs.next()) {
-						reason = new ReferralReason();
-						reason.load(rs);
-						reasons.add(reason);
-						referral_id = reason.getReferralId();
-					}
+					/*
+					 * // get referral reasons already entered against current referral String sql =
+					 * "SELECT referral_reason_id, reason_code, description, referral_id, name_of_service FROM referral_reason rr LEFT JOIN referral_status rs WHERE rr.referral_id = rs.referral_id "
+					 * ; PreparedStatement ps = conn.prepareStatement(sql); ps.setInt(1,
+					 * referral_reason_id); ps.setInt(2, reason_code); ps.setString(3, description);
+					 * ps.setInt(4, referral_id); ps.setString(5, name_of_service); ResultSet rs =
+					 * ps.executeQuery();
+					 * 
+					 * // load reasons into list if (rs.next()) { reason = new ReferralReason();
+					 * reason.load(rs); reasons.add(reason); referral_id = reason.getReferralId(); }
+					 */
 				}
 				// error message in case number of reasons is 4 already
 				else {
@@ -1506,12 +1650,13 @@ public class Application {
 			}
 			flag = false;
 		}
+		// report.setReferralStatus()??
 		report.setReferralId(referral_id);
 		return report;
 
 	}
 
-	private static void referralReason(int referralID) throws Exception {
+	private static ReferralReason referralReason(ReferralReason reason) throws Exception {
 		StringBuilder sb = new StringBuilder();
 		boolean flag = true;
 		int choice1 = 0;
@@ -1522,10 +1667,15 @@ public class Application {
 		System.out.println("\nPlease enter the following information:\n");
 		System.out.print("Reason code: ");
 		reason_code = Integer.parseInt(br.readLine());
+		reason.setReasonCode(reason_code);
+
 		System.out.print("\nName of service: ");
 		name_of_service = readNonEmptyString();
+		reason.setServiceName(name_of_service);
+
 		System.out.print("\nDescription: ");
 		description = readNonEmptyString();
+		reason.setDescription(description);
 
 		while (flag) {
 			System.out.println("\n===| Referral Reason Menu |===\n");
@@ -1542,7 +1692,7 @@ public class Application {
 				PreparedStatement stmt = conn.prepareStatement(sql);
 				stmt.setInt(1, reason_code);
 				stmt.setString(2, description);
-				stmt.setInt(3, referralID);
+				// stmt.setInt(3, referralID);
 				stmt.setString(4, name_of_service);
 				stmt.executeUpdate();
 
@@ -1554,7 +1704,7 @@ public class Application {
 			}
 			flag = false;
 		}
-
+		return reason;
 	}
 
 	private static OutcomeReport dischargeStatus(OutcomeReport report) {
