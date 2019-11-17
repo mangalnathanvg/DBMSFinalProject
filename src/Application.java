@@ -1607,12 +1607,11 @@ public class Application {
 		boolean flag = true;
 		StringBuilder sb = new StringBuilder();
 		int choice = 0;
-		int facilityID = 0;
-		int referrerID = 0;
 		ArrayList<ReferralReason> reasons = new ArrayList<ReferralReason>();
 		int referral_reason_id = 0;
 		int reason_code = 0;
 		int referral_id = 0;
+		int facilityID = 0;
 		String description = null;
 		String name_of_service = null;
 
@@ -1640,7 +1639,7 @@ public class Application {
 			} else if (choice == 2) {
 				if (facilityID != 0) {
 					System.out.println("\nPlease enter referrer ID: ");
-					referrerID = Integer.parseInt(br.readLine());
+					int referrerID = Integer.parseInt(br.readLine());
 					referralStatus.setMedicalStaffId(referrerID);
 
 					// record values in referral_status table
@@ -1663,41 +1662,6 @@ public class Application {
 					ReferralReason reason = new ReferralReason();
 					reason.setReferralId(referralStatus.getReferralId());
 					reasons.add(referralReason(reason));
-
-					/*
-					 * // get referral reasons already entered against current referral String sql =
-					 * "SELECT referral_reason_id, reason_code, description, referral_id, name_of_service FROM referral_reason rr LEFT JOIN referral_status rs WHERE rr.referral_id = rs.referral_id "
-					 * ; PreparedStatement ps = conn.prepareStatement(sql); ps.setInt(1,
-					 * referral_reason_id); ps.setInt(2, reason_code); ps.setString(3, description);
-					 * ps.setInt(4, referral_id); ps.setString(5, name_of_service); ResultSet rs =
-					 * ps.executeQuery();
-					 * 
-					 * // load reasons into list if (rs.next()) { reason = new ReferralReason();
-					 * reason.load(rs); reasons.add(reason); referral_id = reason.getReferralId(); }
-					 */
-					referralReason(reason);
-					// ReferralReason reason = null;
-
-					// get referral reasons already entered against current referral
-					String sql = "SELECT referral_reason_id, reason_code, description, referral_id, name_of_service FROM referral_reason rr LEFT JOIN referral_status rs WHERE rr.referral_id = rs.referral_id ";
-					PreparedStatement ps = conn.prepareStatement(sql);
-					ps.setInt(1, referral_reason_id);
-					ps.setInt(2, reason_code);
-					ps.setString(3, description);
-					ps.setInt(4, referral_id);
-					ps.setString(5, name_of_service);
-					ResultSet rs = ps.executeQuery();
-
-					// load reasons into list
-					if (rs.next()) {
-						reason = new ReferralReason();
-						reason.load(rs);
-						reasons.add(reason);
-						referral_id = reason.getReferralId();
-					}
-					ps.close();
-					rs.close();
-
 				}
 				// error message in case number of reasons is 4 already
 				else {
@@ -1710,7 +1674,7 @@ public class Application {
 			}
 			flag = false;
 		}
-		// report.setReferralStatus()??
+		report.setReferralStatus(referralStatus);
 		report.setReferralId(referral_id);
 		return report;
 
@@ -1719,22 +1683,19 @@ public class Application {
 	private static ReferralReason referralReason(ReferralReason reason) throws Exception {
 		StringBuilder sb = new StringBuilder();
 		boolean flag = true;
-		int choice1 = 0;
-		int reason_code = 0;
-		String name_of_service = null;
-		String description = null;
+		int choice = 0;
 
 		System.out.println("\nPlease enter the following information:\n");
 		System.out.print("Reason code: ");
-		reason_code = Integer.parseInt(br.readLine());
+		int reason_code = Integer.parseInt(br.readLine());
 		reason.setReasonCode(reason_code);
 
 		System.out.print("\nName of service: ");
-		name_of_service = readNonEmptyString();
+		String name_of_service = readNonEmptyString();
 		reason.setServiceName(name_of_service);
 
 		System.out.print("\nDescription: ");
-		description = readNonEmptyString();
+		String description = readNonEmptyString();
 		reason.setDescription(description);
 
 		while (flag) {
@@ -1743,21 +1704,21 @@ public class Application {
 			sb.append("2. Go back\n");
 			System.out.println(sb.toString());
 
-			choice1 = Integer.parseInt(br.readLine());
+			choice = Integer.parseInt(br.readLine());
 
-			if (choice1 == 1) {
+			if (choice == 1) {
 				// record information in referral_reason table
 				String sql = "INSERT INTO referral_reason " + "(reason_code, description, referral_id, name_of_service)"
 						+ "values(?, ?, ?, ?)";
 				PreparedStatement stmt = conn.prepareStatement(sql);
 				stmt.setInt(1, reason_code);
 				stmt.setString(2, description);
-				// stmt.setInt(3, referralID);
+				stmt.setInt(3, reason.getReferralId());
 				stmt.setString(4, name_of_service);
 				stmt.executeUpdate();
 
 				stmt.close();
-			} else if (choice1 == 2) {
+			} else if (choice == 2) {
 				break;
 			} else {
 				System.out.println("\nInvalid option. Please choose one of the existing options.\n");
