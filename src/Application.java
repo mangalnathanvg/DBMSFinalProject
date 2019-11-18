@@ -1009,7 +1009,6 @@ public class Application {
 				}
 		}
 			catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -1017,68 +1016,92 @@ public class Application {
 	private static void addRuleCondition(boolean newRule,boolean newRuleSymbol) {
 		try {
 			
-			int counter = 0;
-		    String sql = "select * from symptom";
-			Statement stmt = conn.createStatement();
-		    ResultSet rs = stmt.executeQuery(sql);
-			HashMap<Integer,Symptom> symptomList = new HashMap<Integer,Symptom> ();
-			while (rs.next()) {
-				++counter;
-				Symptom symptom = new Symptom();
-				symptom.setName(rs.getString("NAME"));
-				sql = "SELECT bp.body_part_code,bp.name FROM body_part bp INNER JOIN symptom sm ON sm.body_part_code = bp.body_part_code WHERE sm.body_part_code = ? ";
-				PreparedStatement ps = conn.prepareStatement(sql);
-				ps.setString(1,rs.getString("body_part_code"));
-				ResultSet rs1 = ps.executeQuery();
-				rs1.next();
-				BodyPart part = new BodyPart();
-				part.setBodyPartCode(rs1.getString(1));
-				part.setName(rs1.getString(2));
-				symptom.setBodyPart(part);
-				symptom.setSymptomCode(rs.getString("SYMPTOM_CODE"));
-				symptomList.put(counter,symptom);
-			}
-			System.out.println("Choose symptom code to create assessment rules:");
-
-			for (Map.Entry<Integer,Symptom> symptom : symptomList.entrySet()) {
-			    System.out.println(symptom.getKey()+" : "+symptom.getValue().getName());
-			}
-
-			int choice = Integer.parseInt(br.readLine());
-			choice = readNumber(1, counter);
-			String symptom_code = symptomList.get(choice).getSymptomCode();
-			String selectedBodyPart = symptomList.get(choice).getBodyPart().getBodyPartCode();
-
-			sql = "SELECT * FROM severity_scale_value ssv INNER JOIN symptom sm ON sm.severity_scale_id = ssv.severity_scale_id WHERE sm.symptom_code = ? ";
-			PreparedStatement ps = conn.prepareStatement(sql);
-			ps.setString(1,symptom_code);
-			rs = ps.executeQuery();
-			HashMap<Integer,SeverityScaleValue> severityList = new HashMap<Integer,SeverityScaleValue> ();
-			counter = 0;
-			int maxScale = 0;
-			while(rs.next()) {
-				++counter;
-				SeverityScaleValue scale = new SeverityScaleValue();
-				scale.setSeverityScaleId(rs.getInt(3));
-				scale.setScaleValue(rs.getString(2));
-				scale.setSort(rs.getInt(4));
-				scale.setSeverityValueId(rs.getInt(1));
-				if(maxScale<scale.getSort()) {
-					maxScale = scale.getSort();
+		    int count = 0;
+		    ArrayList<RuleSymptom> ruleSymList = new ArrayList<RuleSymptom>();
+			Rule rule = new Rule();
+			boolean prioritySelected = true;
+			
+			while(prioritySelected) {
+				HashMap<Integer,Symptom> symptomList = new HashMap<Integer,Symptom> ();
+				RuleSymptom ruleSym = new RuleSymptom();
+		    
+				for (Map.Entry<String,Symptom> symptom : symptoms.entrySet()) {
+					symptomList.put(++count, symptom.getValue());
 				}
-				severityList.put(counter,scale);
-			}
-			System.out.println("Choose severity scale number for the symbol:");
-
-			for (Map.Entry<Integer,SeverityScaleValue> symptom : severityList.entrySet()) {
-			    System.out.println(symptom.getKey()+" : "+symptom.getValue().getScaleValue());
+				System.out.println("Choose symptom");
+				for (Map.Entry<Integer,Symptom> symptom : symptomList.entrySet()) {
+					System.out.println(count+" : "+symptom.getValue().getName());
+				}
+				System.out.println(count+1 +" : Select Priority");
+				int choice = Integer.parseInt(br.readLine());
+				if(choice == count+1) {
+					prioritySelected = selectPriority(ruleSymList, rule);
+				}
+				choice = readNumber(1, count);
+				String selectedSymptom = symptomList.get(choice).getSymptomCode();
+				ruleSym.setSymptom(symptomList.get(choice));
+			
+				if(symptomList.get(choice).getBodyPart() == null)
+				{
+					count = 0;
+					HashMap<Integer,BodyPart> partList = new HashMap<Integer,BodyPart> ();
+					for (Map.Entry<String,BodyPart> part : bodyParts.entrySet()) {
+						partList.put(++count, part.getValue());
+					}
+				
+					System.out.println("No Body is associated with the symtom. Choose body part of your choice!");
+					for (Map.Entry<Integer,BodyPart> part : partList.entrySet()) {
+						System.out.println(part.getKey()+" : "+part.getValue().getName());
+					}
+					choice = Integer.parseInt(br.readLine());
+					choice = readNumber(1, count);
+					ruleSym.setBodyPart(partList.get(choice));
+				}
+				else 
+				{
+				ruleSym.setBodyPart(symptomList.get(choice).getBodyPart());
+				}
+			
+				String selectedSeverityScale = null;
+				boolean flag = true;
+				if(symptoms.get(selectedSymptom).getSeverityScale() == null) {
+					System.out.println("No Severity Scale is associated with this Sysmptom. Choose one from below!");
+					while(flag) {
+						System.out.println("1. Present \n 2.Absent");
+						choice = Integer.parseInt(br.readLine());
+						if(choice == 1) 
+							{
+							selectedSeverityScale = "Present";
+							flag = false;}
+						else if(choice == 2) 
+						{
+						selectedSeverityScale = "Absent";
+						flag = false; }
+						else
+						{
+						System.out.println("Choose a valid Symptom");
+						flag = true;
+						}
+					}
+					for (Map.Entry<Integer,SeverityScaleValue> value : severityScaleValues.entrySet()) {
+						if(value.getValue().getScaleValue() == selectedSeverityScale)
+							ruleSym.setScaleValue(value.getValue());
+					}
+				}
+			else {
+				loadSeverityScales();
+				count = 0;
+				HashMap<Integer,SeverityScaleValue> valueList = new HashMap<Integer,SeverityScaleValue> ();
+				for (Map.Entry<Integer,SeverityScaleValue> value : severityScaleValues.entrySet())
+					valueList.put(++count,value.getValue());
+					
+				for (Map.Entry<Integer,SeverityScaleValue> value : valueList.entrySet())
+					System.out.println(value.getKey() +" : "+value.getValue().getScaleValue());
+				
+				choice = Integer.parseInt(br.readLine());
+				ruleSym.setScaleValue(valueList.get(choice));
 			}
 			
-			choice = Integer.parseInt(br.readLine());
-			choice = readNumber(1, counter);
-			int selectedScaleValue = severityList.get(choice).getSeverityValueId();
-			
-
 			System.out.println("Enter Comparison Symbol : < , > , =");
 			boolean isValid = true;
 			char comparison = 0 ;
@@ -1092,110 +1115,130 @@ public class Application {
 				else
 					isValid = false;
 				}
-			
-			System.out.println("Enter Priority : H , L , Q");
-			isValid = true;
-			char priority = 0 ;
-			while(isValid) {
-				priority = br.readLine().charAt(0);
-				if (!Arrays.asList('H','L','Q').contains(priority))
-					{
-					System.out.println("Enter valid comparsion symbol H , L , Q");
-					isValid = true;
-					}
-				else
-					isValid = false;
-				}
-			
-			if(newRule) {
-			sql = "INSERT INTO rule(priority) values ( to_char(?) )";
-			ps = conn.prepareStatement(sql);
-			ps.setString(1, String.valueOf(priority));
-			rs = ps.executeQuery();
+			ruleSym.setComparisonSymbol(comparison);
+			ruleSymList.add(ruleSym);
 			}
-			
-			if(newRuleSymbol) {
-			sql = "INSERT INTO rule_symptom(comparison_symbol,symptom_code, scale_value_id, body_part_code) values ( to_char(?) , ? , ? , ?)";
-			ps = conn.prepareStatement(sql);
-			ps.setString(1, String.valueOf(comparison));
-			ps.setString(2, symptom_code);
-			ps.setInt(3, selectedScaleValue);
-			ps.setString(4, selectedBodyPart);
-			rs = ps.executeQuery();
-			}
-			sql = "INSERT INTO rule_consists(rule_id,rule_symptom_id) values(?,?)";
-			ps = conn.prepareStatement(sql);
-			int ruleId = loadRulesForIndex();
-			int symbolId = loadRuleSymptomsForIndex();
-			ps.setInt(1, ruleId);
-			ps.setInt(2, symbolId);
-			rs = ps.executeQuery();
 
-//			rs.close();
-//			stmt.close();
-//			conn.close();
+			
 		} catch (Exception e) {
 			System.out.println("Error occured: " + e);
 		} 
 	}
+	private static boolean selectPriority(ArrayList<RuleSymptom> ruleSymlist, Rule rule) {
+		try {
+			if(ruleSymlist.size() == 0 || ruleSymlist.get(0).getSymptom() == null )
+				return false;
+	    ResultSet rs;
+		PreparedStatement ps = null;
+		System.out.println("Enter Priority : H , L , Q");
+		boolean isValid = true;
+		char priority = 0 ;
+		while(isValid) {
+			priority = br.readLine().charAt(0);
+			if (!Arrays.asList('H','L','Q').contains(priority))
+				{
+				System.out.println("Enter valid comparsion symbol H , L , Q");
+				isValid = true;
+				}
+			else
+				isValid = false;
+			}
+
+		rule.setPriority(priority);
+		String sql = "INSERT INTO rule(priority) values ( to_char(?) )";
+		ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+		ps.setString(1, String.valueOf(rule.getPriority()));
+		ps.executeUpdate();
+		rs = ps.getGeneratedKeys();
+		if (rs.next()) {
+			rule.setRuleId(rs.getInt(1));
+		}
+
+		for(RuleSymptom ruleSym:ruleSymlist) {
+			
+			sql = "INSERT INTO rule_symptom(comparison_symbol,symptom_code, scale_value_id, body_part_code) values ( to_char(?) , ? , ? , ?)";
+			ps = conn.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS);
+			ps.setString(1, String.valueOf(ruleSym.getComparisonSymbol()));
+			ps.setString(2, ruleSym.getSymptom().getSymptomCode());
+			ps.setInt(3, ruleSym.getScaleValue().getSeverityValueId());
+			ps.setString(4, ruleSym.getBodyPart().getBodyPartCode());
+			ps.executeUpdate();
+			rs = ps.getGeneratedKeys();
+			if (rs.next()) {
+				ruleSym.setRuleSymptomId(rs.getInt(1));
+			}
+			sql = "INSERT INTO rule_consists(rule_id,rule_symptom_id) values(?,?)";
+			ps = conn.prepareStatement(sql);
+			ps.setInt(1, rule.getRuleId());
+			ps.setInt(2, ruleSym.getRuleSymptomId());
+			rs = ps.executeQuery();
+		}
+		loadRules();
+
+	} catch (Exception e) {
+		System.out.println("Error occured: " + e);
+	}
+		return true;
+		
+	}
+
 	private static void treatedPatient() {
 		StringBuilder sb = null;
 		int choice = 0;
 		boolean flag = false;
 		int counter = 0;
-		int selectedCheckInId = 0;
 
 		try {
-		System.out.println("List of treated patients:\n");
-		
-		Statement stmt = conn.createStatement();
-		ResultSet rs = stmt.executeQuery("SELECT p.patient_id, ci.check_in_id, p.first_name, p.last_name FROM treatment trm INNER JOIN check_in ci on trm.check_in_id = ci.check_in_id INNER JOIN patient p ON ci.patient_id=p.patient_id");
-		HashMap<Integer, Integer> treatedPatientList = new HashMap<>();
-		while (rs.next()) {
-			counter++;
-			System.out.println(counter+": "+ rs.getString(3) + rs.getString(4));
-			treatedPatientList.put(counter,rs.getInt(2));
-		}
-		if(counter>0) {
-		flag = true;
-		System.out.println("Choose patient from the list");	
-		choice = Integer.parseInt(br.readLine());
-		selectedCheckInId = treatedPatientList.get(choice);
-		sb = new StringBuilder();
-		sb.append("1. Checkout\n");		
-		sb.append("2. Go back\n");
-	
-		System.out.println(sb.toString());
-		choice = Integer.parseInt(br.readLine());
-		
-		choice = readNumber(1, 2);
-	
-		while(flag) {
-			if (choice == 1) {
-				patientCheckout();
+			System.out.println("List of treated patients:\n");
+			String sql = "SELECT p.patient_id, ci.check_in_id, p.first_name, p.last_name FROM treatment trm INNER JOIN check_in ci "
+					+ "on trm.check_in_id = ci.check_in_id INNER JOIN patient p ON ci.patient_id=p.patient_id INNER JOIN outcome_report or "
+					+ "on or.check_in_id != ci.check_in_id "
+					+ "WHERE trm.medical_staff_id=?";
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setInt(1, checkedInStaff.getStaffId());
+			ResultSet rs = ps.executeQuery();
+			HashMap<Integer, Integer> treatedPatientList = new HashMap<>();
+			while (rs.next()) {
+				counter++;
+				System.out.println(counter+": "+ rs.getString(3) + rs.getString(4));
+				treatedPatientList.put(counter,rs.getInt(2));
 			}
-			else if (choice ==2) {
-				
+			if(counter>0) {
+				flag = true;
+				System.out.println("Choose patient from the list");	
+				choice = Integer.parseInt(br.readLine());
+				sb = new StringBuilder();
+				sb.append("1. Checkout\n");		
+				sb.append("2. Go back\n");
+				System.out.println(sb.toString());
+				choice = Integer.parseInt(br.readLine());
+				choice = readNumber(1, 2);
+					while(flag) {
+						if (choice == 1) {
+							patientCheckout();
+						}
+						else if (choice ==2) {
+							displayHome();
+						}
+						else {
+							System.out.println("Enter valid choice");
+							flag = true;
+						}
+					}
+			}
+			else if(counter==0) {
+				flag = false;
+				System.out.println("List has no Patients to show");
+				displayHome();
 			}
 			else {
-				System.out.println("Enter valid choice");
-				flag = true;
+				System.out.println("Entered Choice is not Valid");
 			}
 		}
-	}
-		else if(choice==0) {
-			flag = false;
-			System.out.println("List has no Patients to show");
-			displayHome();
-	}
-		else {
-			System.out.println("Entered Choice is not Valid");
-		}
-}
 		catch(Exception e) {
-			
+			System.out.println("Error occured: " + e);
 		}
-}
+	}
 
 	private static void patientCheckout() {
 		StringBuilder sb = null;
@@ -1246,15 +1289,19 @@ public class Application {
 				patientCheckout();
 			}
 			else if (choice == 7) {
-				submitReport(report);
-				System.out.println("Report submitted seccessfully");
-				flag = false;
+				if(submitReport(report)) {
+					System.out.println("Report submitted seccessfully");
+					flag = false;
+				}
+				else{
+					patientCheckout();
+					flag = true;
+				}
 			}
 			else {
 				System.out.println("Enter valid choice");
 				flag = true;
 			}
-		
 		}
 	}
 		catch(Exception e) {
@@ -1292,7 +1339,7 @@ public class Application {
 					patientCheckout();
 				}
 				else {
-					System.out.print("Choose valid options");
+					System.out.print("Choose valid option");
 					flag = true;
 				}
 			}
@@ -1303,27 +1350,38 @@ public class Application {
 		return report;
 	}
 
-	private static void submitReport(OutcomeReport report) {
+	private static boolean submitReport(OutcomeReport report) {
 		
-		try {
-
-		java.sql.Timestamp currentTimestamp = new java.sql.Timestamp(Calendar.getInstance().getTime().getTime());
+		try 
+		{
+			if(report.getDischargeStatus() == 0)
+				{
+				System.out.println("Discharge Status is not valid");
+				return false;
+				}
+			
+			else 
+			{
+				java.sql.Timestamp currentTimestamp = new java.sql.Timestamp(Calendar.getInstance().getTime().getTime());
 		
-		String sql = "INSERT INTO outcome_report(discharge_status,treatment_description, patient_confirmation,generation_time,referral_id,feedback_id) "
+				String sql = "INSERT INTO outcome_report(discharge_status,treatment_description, patient_confirmation,generation_time,referral_id,feedback_id) "
 				+ "values(to_char(?),?,?,?,?,?)";
 		
-		PreparedStatement ps = conn.prepareStatement(sql);
-		ps.setInt(1, report.getDischargeStatus());
-		ps.setString(2, report.getTreatmentDescription());
-		ps.setInt(3,report.getPatientConfirmation());
-		ps.setTimestamp(4,currentTimestamp);
-		ps.setInt(5, report.getReferralId());
-		ps.setInt(6, report.getFeedbackId());
-		ps.executeQuery();
-		
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}	
+				PreparedStatement ps = conn.prepareStatement(sql);
+				ps.setInt(1, report.getDischargeStatus());
+				ps.setString(2, report.getTreatmentDescription());
+				ps.setInt(3,report.getPatientConfirmation());
+				ps.setTimestamp(4,currentTimestamp);
+				ps.setInt(5, report.getReferralId());
+				ps.setInt(6, report.getFeedbackId());
+				ps.executeQuery();
+			
+		} 
+			}
+		catch (SQLException e) {
+				e.printStackTrace();
+				}	
+		return true;
 	}
 
 	private static OutcomeReport addTreatmentDescription(OutcomeReport report) {
