@@ -81,6 +81,7 @@ public class Application {
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
+			System.out.println("=========== Closing connection ===========");
 			conn.close();
 		}
 	}
@@ -438,9 +439,13 @@ public class Application {
 					}
 				} else {
 					checkedInStaff = loadStaff(name, dateOfBirth, city, facilityId);
-					if (checkedInStaff != null && checkedInStaff.isMedical()) {
+					if (checkedInStaff != null) {
 						System.out.println("\nLogged in successfully.\n");
-						displayStaffMenu();
+						if (checkedInStaff.isMedical()) {
+							displayStaffMenu();
+						} else {
+							System.out.println("You do not have privileges to do further actions.");
+						}
 					}
 				}
 				if (checkedInPatient == null && checkedInStaff == null) {
@@ -544,8 +549,8 @@ public class Application {
 				+ "ON P.patient_id = C.patient_id LEFT JOIN treatment t ON t.check_in_id = c.check_in_id LEFT JOIN vital_signs v ON  v.check_in_id = c.check_in_id WHERE t.check_in_id IS NULL AND c.facility_id = ?";
 
 		PreparedStatement stmt = conn.prepareStatement(sql);
-		ResultSet rs = stmt.executeQuery(sql);
 		stmt.setInt(1, checkedInStaff.getPrimaryDepartment(conn).getFacilityId());
+		ResultSet rs = stmt.executeQuery(sql);
 		System.out.println("List of checked-in patients:\n");
 
 		HashMap<Integer, CheckIn> checkedInPatientList = new HashMap<>();
