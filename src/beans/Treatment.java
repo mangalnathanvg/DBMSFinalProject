@@ -1,5 +1,7 @@
 package beans;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -40,4 +42,12 @@ public class Treatment {
 		treatmentTime = rs.getTimestamp("treatment_time");
 	}
 
+	public void insert(Connection conn) throws SQLException {
+		String sql = "INSERT INTO treatment(check_in_id,medical_staff_id,treatment_time) VALUES (?,?,?)";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setInt(1, checkInId);
+		ps.setInt(2, medicalStaffId);
+		ps.setTimestamp(3, treatmentTime);
+		ps.executeUpdate();
+	}
 }

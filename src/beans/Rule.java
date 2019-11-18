@@ -36,6 +36,10 @@ public class Rule {
 		ruleSymptoms.add(ruleSymptom);
 	}
 
+	public ArrayList<RuleSymptom> getRuleSymptoms() {
+		return ruleSymptoms;
+	}
+
 	public void load(ResultSet rs, HashMap<String, BodyPart> bodyParts, HashMap<String, Symptom> symptoms,
 			HashMap<Integer, SeverityScaleValue> severityScaleValues) throws SQLException {
 		ruleId = rs.getInt("rule_id");

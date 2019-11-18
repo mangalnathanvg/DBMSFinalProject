@@ -1,14 +1,27 @@
 package beans;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class VitalSigns {
+	private int checkInId;
+	private int medicalStaffId;
 	private int temperature;
 	private int systolicPresure;
 	private int diastolicPressure;
-	private int checkInId;
-	private int medicalStaffId;
+
+	public VitalSigns(int checkInId, int medicalStaffId, int temperature, int systolicPresure, int diastolicPressure) {
+		this.checkInId = checkInId;
+		this.medicalStaffId = medicalStaffId;
+		this.temperature = temperature;
+		this.systolicPresure = systolicPresure;
+		this.diastolicPressure = diastolicPressure;
+	}
+
+	public VitalSigns() {
+	}
 
 	public int getTemperature() {
 		return temperature;
@@ -53,8 +66,19 @@ public class VitalSigns {
 	public void load(ResultSet rs) throws SQLException {
 		checkInId = rs.getInt("check_in_id");
 		temperature = rs.getInt("temperature");
-		systolicPresure = rs.getInt("systolicPresure");
-		diastolicPressure = rs.getInt("diastolicPressure");
+		systolicPresure = rs.getInt("systolic_presure");
+		diastolicPressure = rs.getInt("diastolic_pressure");
 		medicalStaffId = rs.getInt("medical_staff_id");
+	}
+
+	public void save(Connection conn) throws SQLException {
+		String sql = "INSERT INTO vital_signs(check_in_id,medical_staff_id,temperature,systolic_pressure,diastolic_pressure) VALUES (?,?,?,?,?)";
+		PreparedStatement ps = conn.prepareStatement(sql);
+		ps.setInt(1, checkInId);
+		ps.setInt(2, medicalStaffId);
+		ps.setInt(3, temperature);
+		ps.setInt(4, systolicPresure);
+		ps.setInt(5, diastolicPressure);
+		ps.executeUpdate();
 	}
 }

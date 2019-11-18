@@ -2,6 +2,7 @@ package beans;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class SymptomMetadata {
@@ -78,7 +79,7 @@ public class SymptomMetadata {
 		this.severityScaleValueId = severityScaleValueId;
 	}
 
-	public void save(Connection conn) throws SQLException {
+	public void insert(Connection conn) throws SQLException {
 		String sql = "INSERT INTO symptom_metadata(check_in_id,symptom_code,body_part_code,duration_days,severity_scale_value,"
 				+ "first_occurrence,cause,description) VALUES (?,?,?,?,?,?,?,?);";
 		PreparedStatement ps = conn.prepareStatement(sql);
@@ -91,5 +92,16 @@ public class SymptomMetadata {
 		ps.setString(7, cause);
 		ps.setString(8, description);
 		ps.executeUpdate();
+	}
+
+	public void load(ResultSet rs) throws SQLException {
+		checkInId = rs.getInt("check_in_id");
+		symptomCode = rs.getString("symptom_code");
+		bodyPartCode = rs.getString("bodyPart_code");
+		durationDays = rs.getInt("duration_days");
+		severityScaleValueId = rs.getInt("severity_scale_value_id");
+		firstOccurrence = rs.getInt("first_occurrence");
+		cause = rs.getString("cause");
+		description = rs.getString("description");
 	}
 }

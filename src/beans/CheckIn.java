@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 
 public class CheckIn {
 	private int checkInId;
@@ -17,7 +18,8 @@ public class CheckIn {
 
 	private VitalSigns vitalSigns;
 	private Treatment treatment;
-	private SymptomMetadata metadata;
+	private ArrayList<SymptomMetadata> metadata;
+	private Patient patient;
 
 	public int getCheckInId() {
 		return checkInId;
@@ -75,7 +77,28 @@ public class CheckIn {
 		this.facilityId = facilityId;
 	}
 
-	public void load(ResultSet rs) throws SQLException {
+	public Patient getPatient() {
+		return patient;
+	}
+
+	public ArrayList<SymptomMetadata> getSymptomMetadata(Connection conn) throws SQLException {
+		if (metadata == null) {
+			String sql = "SELECT * from symptom_metadata where check_in_id = ?";
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setInt(1, checkInId);
+			ps.executeQuery();
+			ResultSet rs = ps.getResultSet();
+			while (rs.next()) {
+				SymptomMetadata symptomMetadata = new SymptomMetadata();
+				symptomMetadata.load(rs);
+			}
+			rs.close();
+			ps.close();
+		}
+		return metadata;
+	}
+
+	public void load(ResultSet rs, boolean loadPatient) throws SQLException {
 		checkInId = rs.getInt("check_in_id");
 		patientId = rs.getInt("patient_id");
 		facilityId = rs.getInt("facility_id");
@@ -88,20 +111,34 @@ public class CheckIn {
 
 		treatment = new Treatment();
 		treatment.load(rs);
+
+		if (loadPatient) {
+			patient = new Patient();
+			patient.load(rs, false);
+		}
 	}
 
 	public void save(Connection conn) throws SQLException {
-		String sql = "INSERT INTO check_in(start_time,end_time,priority,patient_id,facility_id) VALUES (?,?,?,?,?);";
-		PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+		PreparedStatement ps = null;
+		if (checkInId == 0) {
+			String sql = "INSERT INTO check_in(start_time,end_time,priority,patient_id,facility_id) VALUES (?,?,?,?,?)";
+			ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+		} else {
+			String sql = "UPDATE check_in SET start_time=?,end_time=?,priority=?,patient_id=?,facility_id=? WHERE check_in_id=?";
+			ps = conn.prepareStatement(sql);
+			ps.setInt(6, checkInId);
+		}
 		ps.setTimestamp(1, startTime);
 		ps.setTimestamp(2, endTime);
 		ps.setInt(3, priority);
 		ps.setInt(4, patientId);
 		ps.setInt(5, facilityId);
 		ps.executeUpdate();
-		ResultSet rs = ps.getGeneratedKeys();
-		if (rs.next()) {
-			checkInId = rs.getInt(1);
+		if (checkInId == 0) {
+			ResultSet rs = ps.getGeneratedKeys();
+			if (rs.next()) {
+				checkInId = rs.getInt(1);
+			}
 		}
 	}
 }

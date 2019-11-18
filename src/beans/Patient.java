@@ -76,14 +76,16 @@ public class Patient {
 		this.address = address;
 	}
 
-	public void load(ResultSet rs) throws SQLException {
+	public void load(ResultSet rs, boolean loadAddress) throws SQLException {
 		patientId = rs.getInt("patient_id");
 		firstName = rs.getString("first_name");
 		lastName = rs.getString("last_name");
 		dateOfBirth = rs.getDate("date_of_birth");
 		phoneNumber = rs.getLong("phone_number");
-		address = new Address();
-		address.load(rs);
+		if (loadAddress) {
+			address = new Address();
+			address.load(rs);
+		}
 	}
 
 	public void save(Connection conn) throws SQLException {
@@ -99,6 +101,10 @@ public class Patient {
 		if (rs.next()) {
 			patientId = rs.getInt(1);
 		}
+	}
+
+	public String getFullName() {
+		return firstName + " " + lastName;
 	}
 
 }
