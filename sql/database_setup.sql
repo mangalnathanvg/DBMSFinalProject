@@ -81,6 +81,11 @@ CREATE TABLE non_medical_staff(
     primary_department_code VARCHAR2(5)
 );
 
+CREATE TABLE medical_staff(
+    medical_staff_id NUMBER(10) PRIMARY KEY,
+    primary_department_code VARCHAR2(5)
+);
+
 CREATE TABLE secondary_medical_department(
     medical_staff_id NUMBER(10),
     medical_service_dept_code VARCHAR2(5),
@@ -115,10 +120,6 @@ CREATE TABLE symptom(
     body_part_code VARCHAR2(20)
 );
 
-CREATE TABLE medical_staff(
-    medical_staff_id NUMBER(10) PRIMARY KEY,
-    primary_department_code VARCHAR2(5)
-);
 
 CREATE TABLE symptom_metadata(
     check_in_id VARCHAR2(20),
