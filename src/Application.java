@@ -309,9 +309,8 @@ public class Application {
 			sb.append("2. Find facilities that did not have a negative experience for a specific period \n");
 			sb.append("3. \n");
 			sb.append("4. \n");
-			sb.append(
-					"5. Find the facility with the most number of negative experiences (overall i.e. of either kind\n");
-			sb.append("6. Find each facility, list the patient encounters with the top five longest check-in phases\n");
+			sb.append("5. \n");
+			sb.append("6. \n");
 			sb.append("7. Exit\n");
 			System.out.println(sb.toString());
 
