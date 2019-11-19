@@ -286,9 +286,7 @@ public class Application {
 			if (choice == 1) {
 				displaySignIn();
 			} else if (choice == 2) {
-//				displaySignUp();
-//				treatedPatient();
-				addAssessmentRule();
+				displaySignUp();
 			} else if (choice == 3) {
 				displayDemoQueries();
 			} else if (choice == 4) {
@@ -298,7 +296,54 @@ public class Application {
 
 	}
 
-	private static void displayDemoQueries() {
+	private static void displayDemoQueries() throws Exception {
+		int choice = 0;
+		StringBuilder sb = null;
+		Statement stmt = conn.createStatement();
+		ResultSet rs = null;
+		System.out.println("DEMO QUERIES");
+		while (true) {
+			sb = new StringBuilder();
+			sb.append("\nPlease choose Query from the below options:\n");
+			sb.append("1. Find all patients that were discharged but had negative experiences at any facility\n");
+			sb.append("2. Find facilities that did not have a negative experience for a specific period \n");
+			sb.append("3. \n");
+			sb.append("4. \n");
+			sb.append("5. \n");
+			sb.append("6. \n");
+			sb.append("7. Exit\n");
+			System.out.println(sb.toString());
+
+			choice = readNumber(1, 7);
+
+			if (choice == 1) {
+				rs = stmt.executeQuery(
+						"SELECT p.first_name , p.last_name , c.start_time, otr.generation_time, ne.description "
+								+ "FROM patient p INNER JOIN check_in c ON p.patient_id = c.patient_id "
+								+ "INNER JOIN outcome_report otr ON c.check_in_id = otr.check_in_id "
+								+ "INNER JOIN negative_experience ne ON otr.report_id = ne.report_id "
+								+ "WHERE otr.patient_confirmation IS NOT NULL");
+
+				System.out.println("First_Name	Last_Name	Check-In Date	Discharge Date	Negative experiences");
+				while (rs.next()) {
+					System.out.println(rs.getString(1) + "	" + rs.getString(2) + "	" + rs.getTimestamp(3) + "	"
+							+ rs.getTimestamp(4) + "	" + rs.getString(5));
+				}
+
+			} else if (choice == 2) {
+
+			} else if (choice == 3) {
+
+			} else if (choice == 4) {
+
+			} else if (choice == 5) {
+
+			} else if (choice == 6) {
+
+			} else if (choice == 7) {
+				break;
+			}
+		}
 
 	}
 
@@ -1229,249 +1274,232 @@ public class Application {
 		}
 	}
 
-
 	private static void addAssessmentRule() {
 		try {
-			
-		    int count = 0;
-		    ArrayList<RuleSymptom> ruleSymList = new ArrayList<RuleSymptom>();
+
+			int count = 0;
+			ArrayList<RuleSymptom> ruleSymList = new ArrayList<RuleSymptom>();
 			Rule rule = new Rule();
 			boolean prioritySelected = true;
 			int choice;
-			
-			while(prioritySelected) {
+
+			while (prioritySelected) {
 				count = 0;
-				HashMap<Integer,Symptom> symptomList = new HashMap<Integer,Symptom> ();
+				HashMap<Integer, Symptom> symptomList = new HashMap<Integer, Symptom>();
 				RuleSymptom ruleSym = new RuleSymptom();
-		    
-				for (Map.Entry<String,Symptom> symptom : symptoms.entrySet()) {
+
+				for (Map.Entry<String, Symptom> symptom : symptoms.entrySet()) {
 					count++;
 					symptomList.put(count, symptom.getValue());
 				}
 				System.out.println("Choose symptom");
-				for (Map.Entry<Integer,Symptom> symptom : symptomList.entrySet()) {
-					System.out.println(symptom.getKey()+" : "+symptom.getValue().getName());
+				for (Map.Entry<Integer, Symptom> symptom : symptomList.entrySet()) {
+					System.out.println(symptom.getKey() + " : " + symptom.getValue().getName());
 				}
-				System.out.println(count+1 +" : Select Priority");
+				System.out.println(count + 1 + " : Select Priority");
 				choice = Integer.parseInt(br.readLine());
-				choice = readNumber(1,count+1);
-				if(choice == count+1) {
+				choice = readNumber(1, count + 1);
+				if (choice == count + 1) {
 					prioritySelected = selectPriority(ruleSymList, rule);
 					continue;
 				}
 
 				String selectedSymptom = symptomList.get(choice).getSymptomCode();
 				ruleSym.setSymptom(symptomList.get(choice));
-				if(symptomList.get(choice).getBodyPart() == null)
-				{
+				if (symptomList.get(choice).getBodyPart() == null) {
 					count = 0;
-					HashMap<Integer,BodyPart> partList = new HashMap<Integer,BodyPart> ();
-					for (Map.Entry<String,BodyPart> part : bodyParts.entrySet()) {
+					HashMap<Integer, BodyPart> partList = new HashMap<Integer, BodyPart>();
+					for (Map.Entry<String, BodyPart> part : bodyParts.entrySet()) {
 						partList.put(++count, part.getValue());
 					}
-				
+
 					System.out.println("No Body is associated with the symtom. Choose body part of your choice!");
-					for (Map.Entry<Integer,BodyPart> part : partList.entrySet()) {
-						System.out.println(part.getKey()+" : "+part.getValue().getName());
+					for (Map.Entry<Integer, BodyPart> part : partList.entrySet()) {
+						System.out.println(part.getKey() + " : " + part.getValue().getName());
 					}
 //					choice = Integer.parseInt(br.readLine());
 					choice = readNumber(1, count);
 					ruleSym.setBodyPart(partList.get(choice));
-				}
-				else 
-				{
-				ruleSym.setBodyPart(symptomList.get(choice).getBodyPart());
+				} else {
+					ruleSym.setBodyPart(symptomList.get(choice).getBodyPart());
 				}
 				System.out.println("step 3");
 				String selectedSeverityScale = null;
 				boolean flag = true;
-				if(symptoms.get(selectedSymptom).getSeverityScale() == null) {
+				if (symptoms.get(selectedSymptom).getSeverityScale() == null) {
 					System.out.println("No Severity Scale is associated with this Sysmptom. Choose one from below!");
-					while(flag) {
+					while (flag) {
 						System.out.println("1. Present \n2. Absent");
 //						choice = Integer.parseInt(br.readLine());
 						choice = readNumber(1, 2);
-						if(choice == 1) 
-							{
+						if (choice == 1) {
 							selectedSeverityScale = "Present";
-							flag = false;}
-						else if(choice == 2) 
-						{
-						selectedSeverityScale = "Absent";
-						flag = false; }
-						else
-						{
-						System.out.println("Choose a valid Symptom");
-						flag = true;
+							flag = false;
+						} else if (choice == 2) {
+							selectedSeverityScale = "Absent";
+							flag = false;
+						} else {
+							System.out.println("Choose a valid Symptom");
+							flag = true;
 						}
 					}
-					for (Map.Entry<Integer,SeverityScaleValue> value : severityScaleValues.entrySet()) {
-						if(value.getValue().getScaleValue() == selectedSeverityScale)
+					for (Map.Entry<Integer, SeverityScaleValue> value : severityScaleValues.entrySet()) {
+						if (value.getValue().getScaleValue() == selectedSeverityScale)
 							ruleSym.setScaleValue(value.getValue());
 					}
-				}
-			else {
-				loadSeverityScales();
-				count = 0;
-				HashMap<Integer,SeverityScaleValue> valueList = new HashMap<Integer,SeverityScaleValue> ();
-				for (Map.Entry<Integer,SeverityScaleValue> value : severityScaleValues.entrySet())
-				{	if(symptoms.get(selectedSymptom).getSeverityScale().getSeverityScaleId() == value.getValue().getSeverityScaleId())
-					valueList.put(++count,value.getValue());
-				}
-					
-				for (Map.Entry<Integer,SeverityScaleValue> value : valueList.entrySet())
-					System.out.println(value.getKey() +" : "+value.getValue().getScaleValue());
-				
+				} else {
+					loadSeverityScales();
+					count = 0;
+					HashMap<Integer, SeverityScaleValue> valueList = new HashMap<Integer, SeverityScaleValue>();
+					for (Map.Entry<Integer, SeverityScaleValue> value : severityScaleValues.entrySet()) {
+						if (symptoms.get(selectedSymptom).getSeverityScale().getSeverityScaleId() == value.getValue()
+								.getSeverityScaleId())
+							valueList.put(++count, value.getValue());
+					}
+
+					for (Map.Entry<Integer, SeverityScaleValue> value : valueList.entrySet())
+						System.out.println(value.getKey() + " : " + value.getValue().getScaleValue());
+
 //				choice = Integer.parseInt(br.readLine());
-				choice = readNumber(1, count);
-				ruleSym.setScaleValue(valueList.get(choice));
+					choice = readNumber(1, count);
+					ruleSym.setScaleValue(valueList.get(choice));
+				}
+
+				System.out.println("Enter Comparison Symbol : < , > , =");
+				boolean isValid = true;
+				char comparison = 0;
+				while (isValid) {
+					comparison = br.readLine().charAt(0);
+					if (!Arrays.asList('>', '<', '=').contains(comparison)) {
+						System.out.println("Enter valid comparsion symbol < , > , =");
+						isValid = true;
+					} else
+						isValid = false;
+				}
+				ruleSym.setComparisonSymbol(comparison);
+				ruleSymList.add(ruleSym);
 			}
-			
-			System.out.println("Enter Comparison Symbol : < , > , =");
+
+		} catch (Exception e) {
+			System.out.println("Error occured: " + e);
+		}
+	}
+
+	private static boolean selectPriority(ArrayList<RuleSymptom> ruleSymlist, Rule rule) {
+		try {
+			if (ruleSymlist.size() == 0 || ruleSymlist.get(0).getSymptom() == null) {
+				System.out.println("No Rules conditions are added. Add atleast one rule");
+				return true;
+			}
+			ResultSet rs;
+			PreparedStatement ps = null;
+			System.out.println("Enter Priority : H , L , Q");
 			boolean isValid = true;
-			char comparison = 0;
+			char priority = 0;
 			while (isValid) {
-				comparison = br.readLine().charAt(0);
-				if (!Arrays.asList('>', '<', '=').contains(comparison)) {
-					System.out.println("Enter valid comparsion symbol < , > , =");
+				priority = br.readLine().charAt(0);
+				if (!Arrays.asList('H', 'L', 'Q').contains(priority)) {
+					System.out.println("Enter valid priority H , L , Q");
 					isValid = true;
 				} else
 					isValid = false;
-				}
-			ruleSym.setComparisonSymbol(comparison);
-			ruleSymList.add(ruleSym);
 			}
 
-			
+			rule.setPriority(priority);
+			String[] primaryKey = { "RULE_ID" };
+			String sql = "INSERT INTO rule(priority) values ( to_char(?) )";
+			ps = conn.prepareStatement(sql, primaryKey);
+			ps.setString(1, String.valueOf(rule.getPriority()));
+			ps.executeUpdate();
+			ResultSet rs1 = ps.getGeneratedKeys();
+			if (rs1.next()) {
+				rule.setRuleId(rs1.getInt(1));
+			}
+
+			String[] primaryKey1 = { "RULE_SYMPTOM_ID" };
+			for (RuleSymptom ruleSym : ruleSymlist) {
+
+				sql = "INSERT INTO rule_symptom(comparison_symbol,symptom_code, scale_value_id, body_part_code) values ( to_char(?) , ? , ? , ?)";
+				ps = conn.prepareStatement(sql, primaryKey1);
+				ps.setString(1, String.valueOf(ruleSym.getComparisonSymbol()));
+				ps.setString(2, ruleSym.getSymptom().getSymptomCode());
+				ps.setInt(3, ruleSym.getScaleValue().getSeverityValueId());
+				ps.setString(4, ruleSym.getBodyPart().getBodyPartCode());
+				ps.executeUpdate();
+				rs = ps.getGeneratedKeys();
+				if (rs.next()) {
+					ruleSym.setRuleSymptomId(rs.getInt(1));
+				}
+				sql = "INSERT INTO rule_consists(rule_id,rule_symptom_id) values(?,?)";
+				ps = conn.prepareStatement(sql);
+				ps.setInt(1, rule.getRuleId());
+				ps.setInt(2, ruleSym.getRuleSymptomId());
+				rs = ps.executeQuery();
+			}
+			System.out.println("Rule generated Successfully");
+			loadRules();
+
 		} catch (Exception e) {
 			System.out.println("Error occured: " + e);
-		} 
-	}
-	private static boolean selectPriority(ArrayList<RuleSymptom> ruleSymlist, Rule rule) {
-		try {
-			if(ruleSymlist.size() == 0 || ruleSymlist.get(0).getSymptom() == null )
-				{
-				System.out.println("No Rules conditions are added. Add atleast one rule");
-				return true;
-				}
-	    ResultSet rs;
-		PreparedStatement ps = null;
-		System.out.println("Enter Priority : H , L , Q");
-		boolean isValid = true;
-		char priority = 0 ;
-		while(isValid) {
-			priority = br.readLine().charAt(0);
-			if (!Arrays.asList('H','L','Q').contains(priority))
-				{
-				System.out.println("Enter valid priority H , L , Q");
-				isValid = true;
-				}
-			else
-				isValid = false;
-			}
-
-		rule.setPriority(priority);
-		String[] primaryKey = {"RULE_ID"};
-		String sql = "INSERT INTO rule(priority) values ( to_char(?) )";
-		ps = conn.prepareStatement(sql, primaryKey);
-		ps.setString(1, String.valueOf(rule.getPriority()));
-		ps.executeUpdate();
-		ResultSet rs1 = ps.getGeneratedKeys();
-		if (rs1.next()) {
-			rule.setRuleId(rs1.getInt(1));
 		}
-
-		String[] primaryKey1 = {"RULE_SYMPTOM_ID"};
-		for(RuleSymptom ruleSym:ruleSymlist) {
-
-			sql = "INSERT INTO rule_symptom(comparison_symbol,symptom_code, scale_value_id, body_part_code) values ( to_char(?) , ? , ? , ?)";
-			ps = conn.prepareStatement(sql,primaryKey1);
-			ps.setString(1, String.valueOf(ruleSym.getComparisonSymbol()));
-			ps.setString(2, ruleSym.getSymptom().getSymptomCode());
-			ps.setInt(3, ruleSym.getScaleValue().getSeverityValueId());
-			ps.setString(4, ruleSym.getBodyPart().getBodyPartCode());
-			ps.executeUpdate();
-			rs = ps.getGeneratedKeys();
-			if (rs.next()) {
-				ruleSym.setRuleSymptomId(rs.getInt(1));
-			}
-			sql = "INSERT INTO rule_consists(rule_id,rule_symptom_id) values(?,?)";
-			ps = conn.prepareStatement(sql);
-			ps.setInt(1, rule.getRuleId());
-			ps.setInt(2, ruleSym.getRuleSymptomId());
-			rs = ps.executeQuery();
-		}
-		System.out.println("Rule generated Successfully");
-		loadRules();
-
-	} catch (Exception e) {
-		System.out.println("Error occured: " + e);
-	}
 		return false;
-		
+
 	}
 
 	private static void treatedPatient() {
 		try {
-		if(checkedInStaff == null) {
-			System.out.println("Medical staff is not logined In");
-			displayHome();
-		}
-		StringBuilder sb = null;
-		int choice = 0;
-		boolean flag = false;
-		int counter = 0;
-
+			if (checkedInStaff == null) {
+				System.out.println("Medical staff is not logined In");
+				displayHome();
+			}
+			StringBuilder sb = null;
+			int choice = 0;
+			boolean flag = false;
+			int counter = 0;
 
 			String sql = "SELECT p.patient_id, ci.check_in_id, p.first_name, p.last_name FROM treatment trm "
 					+ "INNER JOIN check_in ci ON trm.check_in_id = ci.check_in_id "
 					+ "INNER JOIN patient p ON ci.patient_id = p.patient_id "
-					+ "INNER JOIN outcome_report r ON r.check_in_id != ci.check_in_id"
-					+ "WHERE trm.medical_staff_id=?";
+					+ "INNER JOIN outcome_report r ON r.check_in_id != ci.check_in_id" + "WHERE trm.medical_staff_id=?";
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setInt(1, checkedInStaff.getStaffId());
 			ResultSet rs = ps.executeQuery();
 			HashMap<Integer, Integer> treatedPatientList = new HashMap<>();
 			while (rs.next()) {
 				counter++;
-				System.out.println(counter+": "+ rs.getString(3) + rs.getString(4));
-				treatedPatientList.put(counter,rs.getInt(2));
+				System.out.println(counter + ": " + rs.getString(3) + rs.getString(4));
+				treatedPatientList.put(counter, rs.getInt(2));
 			}
 
-			if(counter>0) {
+			if (counter > 0) {
 				flag = true;
-				System.out.println("Choose patient from the list\n");	
+				System.out.println("Choose patient from the list\n");
 				choice = Integer.parseInt(br.readLine());
 				sb = new StringBuilder();
-				sb.append("1. Checkout\n");		
+				sb.append("1. Checkout\n");
 				sb.append("2. Go back\n");
 				System.out.println(sb.toString());
 				choice = Integer.parseInt(br.readLine());
 				choice = readNumber(1, 2);
-					while(flag) {
-						if (choice == 1) {
-							patientCheckout();
-						}
-						else if (choice ==2) {
-							displayHome();
-						}
-						else {
-							System.out.println("Enter valid choice");
-							flag = true;
-						}
+				while (flag) {
+					if (choice == 1) {
+						patientCheckout();
+					} else if (choice == 2) {
+						displayHome();
+					} else {
+						System.out.println("Enter valid choice");
+						flag = true;
 					}
-			}
-			else if(counter==0) {
+				}
+			} else if (counter == 0) {
 				flag = false;
 				System.out.println("List has no Patients to show");
 				displayHome();
-			}
-			else {
+			} else {
 				System.out.println("Entered Choice is not Valid");
 			}
 			rs.close();
-		}
-		catch(Exception e) {
+		} catch (Exception e) {
 			System.out.println("Error occured: " + e);
 		}
 	}
@@ -1483,41 +1511,41 @@ public class Application {
 		OutcomeReport report = new OutcomeReport();
 
 		try {
-		System.out.println("Choose options:\n");
-		sb = new StringBuilder();
-		sb.append("1. Discharge Status\n");	
-		sb.append("2. Referal Status\n");
-		sb.append("3. Treatment\n");
-		sb.append("4. Negative Experience\n");
-		sb.append("5. Patient Confirmation\n");
-		sb.append("6. Go back\n");
-		sb.append("7. Submit\n");
-		System.out.println(sb.toString());
-		choice = Integer.parseInt(br.readLine());
-		
-		choice = readNumber(1, 6);
-		while (flag) {
-			if (choice == 1) {
-				dischargeStatus(report);
-				System.out.println("Discharge Status added successfully");
-			} else if (choice == 2) {
-				if (report.getDischargeStatus() == 'R') {
-					addReferralStatus(report);
-				} else {
-					System.out.println("You can refer a patient only if the discharge status is Referred.");
+			System.out.println("Choose options:\n");
+			sb = new StringBuilder();
+			sb.append("1. Discharge Status\n");
+			sb.append("2. Referal Status\n");
+			sb.append("3. Treatment\n");
+			sb.append("4. Negative Experience\n");
+			sb.append("5. Patient Confirmation\n");
+			sb.append("6. Go back\n");
+			sb.append("7. Submit\n");
+			System.out.println(sb.toString());
+			choice = Integer.parseInt(br.readLine());
+
+			choice = readNumber(1, 6);
+			while (flag) {
+				if (choice == 1) {
+					dischargeStatus(report);
+					System.out.println("Discharge Status added successfully");
+				} else if (choice == 2) {
+					if (report.getDischargeStatus() == 'R') {
+						addReferralStatus(report);
+					} else {
+						System.out.println("You can refer a patient only if the discharge status is Referred.");
+					}
+				} else if (choice == 3) {
+					System.out.println("Enter treatment description for selected patient:\n");
+					report.setTreatmentDescription(readNonEmptyString());
+					System.out.println("Description added successfully");
+				} else if (choice == 4) {
+					addNegativeExperience(report);
+				} else if (choice == 5) {
+					break;
+				} else if (choice == 6) {
+					flag = displayStaffReportConfirmation(report);
 				}
-			} else if (choice == 3) {
-				System.out.println("Enter treatment description for selected patient:\n");
-				report.setTreatmentDescription(readNonEmptyString());
-				System.out.println("Description added successfully");
-			} else if (choice == 4) {
-				addNegativeExperience(report);
-			} else if (choice == 5) {
-				break;
-			} else if (choice == 6) {
-				flag = displayStaffReportConfirmation(report);
 			}
-		}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
