@@ -5,7 +5,6 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 public class Patient {
 
@@ -89,8 +88,9 @@ public class Patient {
 	}
 
 	public void save(Connection conn) throws SQLException {
-		String sql = "INSERT INTO patient(first_name,last_name,date_of_birth,phone_number,address_id) VALUES (?,?,?,?,?);";
-		PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+		String sql = "INSERT INTO patient(first_name,last_name,date_of_birth,phone_number,address_id) VALUES (?,?,?,?,?)";
+		String[] primaryKey = { "patient_id" };
+		PreparedStatement ps = conn.prepareStatement(sql, primaryKey);
 		ps.setString(1, firstName);
 		ps.setString(2, lastName);
 		ps.setDate(3, dateOfBirth);
