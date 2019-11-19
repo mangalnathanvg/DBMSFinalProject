@@ -156,6 +156,7 @@ public class OutcomeReport {
 			ps = conn.prepareStatement(sql);
 			ps.setInt(7, reportId);
 		}
+		System.out.println("*" + dischargeStatus + "*");
 		ps.setInt(1, dischargeStatus);
 		ps.setString(2, treatmentDescription);
 		ps.setInt(3, patientConfirmation);

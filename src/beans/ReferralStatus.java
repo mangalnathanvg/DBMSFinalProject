@@ -71,7 +71,7 @@ public class ReferralStatus {
 	}
 
 	public void insert(Connection conn) throws SQLException {
-		String sql = "INSERT INTO referral_status(facilty_id,medical_staff_id) VALUES (?,?)";
+		String sql = "INSERT INTO referral_status(facility_id,medical_staff_id) VALUES (?,?)";
 		String[] primaryKey = { "referral_id" };
 		PreparedStatement ps = conn.prepareStatement(sql, primaryKey);
 		ps.setInt(1, facilityId);

@@ -58,16 +58,16 @@ public class ReferralReason {
 		reasonCode = rs.getInt("reason_code");
 		description = rs.getString("description");
 		referralId = rs.getInt("referral_id");
-		serviceName = rs.getString("name_of_service");
+		serviceName = rs.getString("service_name");
 	}
 
 	public void insert(Connection conn) throws SQLException {
-		String sql = "INSERT INTO referral_reason " + "(reason_code, description, referral_id, name_of_service)"
+		String sql = "INSERT INTO referral_reason " + "(reason_code, description, referral_id, service_name)"
 				+ "values(?, ?, ?, ?)";
 		PreparedStatement stmt = conn.prepareStatement(sql);
 		stmt.setInt(1, reasonCode);
 		stmt.setString(2, description);
-		stmt.setInt(3, referralReasonId);
+		stmt.setInt(3, referralId);
 		stmt.setString(4, serviceName);
 		stmt.executeUpdate();
 
