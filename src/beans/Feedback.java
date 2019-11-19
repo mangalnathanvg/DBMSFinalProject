@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 public class Feedback {
 
@@ -28,8 +27,9 @@ public class Feedback {
 	}
 
 	public void insert(Connection conn) throws SQLException {
+		String[] primaryKey = { "feedback_id" };
 		String sql = "INSERT INTO feedback(description) VALUES (?)";
-		PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+		PreparedStatement ps = conn.prepareStatement(sql, primaryKey);
 		ps.setString(8, description);
 		ps.executeUpdate();
 		ResultSet rs = ps.getGeneratedKeys();

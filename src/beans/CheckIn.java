@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 
@@ -12,7 +11,7 @@ public class CheckIn {
 	private int checkInId;
 	private Timestamp startTime;
 	private Timestamp endTime;
-	private char priority;
+	private char priority = '?';
 	private int patientId;
 	private int facilityId;
 
@@ -102,7 +101,10 @@ public class CheckIn {
 		checkInId = rs.getInt("check_in_id");
 		patientId = rs.getInt("patient_id");
 		facilityId = rs.getInt("facility_id");
-		priority = rs.getString("priority").charAt(0);
+		String pri = rs.getString("priority");
+		if (pri != null) {
+			priority = pri.charAt(0);
+		}
 		startTime = rs.getTimestamp("start_time");
 		endTime = rs.getTimestamp("end_time");
 
@@ -122,7 +124,8 @@ public class CheckIn {
 		PreparedStatement ps = null;
 		if (checkInId == 0) {
 			String sql = "INSERT INTO check_in(start_time,end_time,priority,patient_id,facility_id) VALUES (?,?,?,?,?)";
-			ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+			String[] primaryKey = { "check_in_id" };
+			ps = conn.prepareStatement(sql, primaryKey);
 		} else {
 			String sql = "UPDATE check_in SET start_time=?,end_time=?,priority=?,patient_id=?,facility_id=? WHERE check_in_id=?";
 			ps = conn.prepareStatement(sql);
@@ -130,9 +133,9 @@ public class CheckIn {
 		}
 		ps.setTimestamp(1, startTime);
 		ps.setTimestamp(2, endTime);
-		ps.setInt(3, priority);
-		ps.setInt(4, patientId);
-		ps.setInt(5, facilityId);
+		ps.setString(3, priority == '?' ? null : "" + priority);
+		ps.setInt(4, patientId == 0 ? null : patientId);
+		ps.setInt(5, facilityId == 0 ? null : facilityId);
 		ps.executeUpdate();
 		if (checkInId == 0) {
 			ResultSet rs = ps.getGeneratedKeys();
