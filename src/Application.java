@@ -330,8 +330,8 @@ public class Application {
 			sb.append("\nPlease choose Query from the below options:\n");
 			sb.append("1. Find all patients that were discharged but had negative experiences at any facility\n");
 			sb.append("2. Find facilities that did not have a negative experience for a specific period \n");
-			sb.append("3. \n");
-			sb.append("4. \n");
+			sb.append("3.  For each facility, find the facility that sends the most referrals to.\n");
+			sb.append("4. Find facilities that had no negative experience for patients with cardiac symptoms\n");
 			sb.append("5. Find the facility with the most number of negative experiences\n");
 			sb.append(
 					"6. Find each facility, list the patient encounters with the top five longest check-in phases \n");
@@ -385,8 +385,36 @@ public class Application {
 				}
 
 			} else if (choice == 3) {
+				rs = stmt.executeQuery(
+						"Select s.referedId, max(count) from (select c.facility_id as referedId, r.facility_id as referred_facility_id, "
+								+ "COUNT(r.facility_id) as count from referral_status r inner join outcome_report o on o.referral_id = r.referral_id inner join "
+								+ "check_in c on c.check_in_id = o.check_in_id inner join medical_facility f on f.facility_id = r.facility_id group by c.facility_id, "
+								+ "r.facility_id) s, medical_facility mf where s.referedId = mf.facility_id  group by s.referedId");
+				System.out.println("Referred facility ID       Facility Name         Count");
+				rs.next();
+				String count = rs.getString(2);
+				String fid = rs.getString(1);
+
+				ResultSet rs2 = stmt.executeQuery("SELECT NAME FROM MEDICAL_FACILITY WHERE FACILITY_ID = " + fid);
+				rs2.next();
+				String name = rs2.getString(1);
+
+				System.out.println(fid + "          " + name + "      " + count);
 
 			} else if (choice == 4) {
+				rs = stmt.executeQuery("SELECT f.name " + "FROM medical_facility f "
+						+ "INNER JOIN check_in c ON f.facility_id = c.facility_id "
+						+ "INNER JOIN patient p ON p.patient_id = c.patient_id "
+						+ "INNER JOIN outcome_report o ON o.check_in_id = c.check_in_id "
+						+ "INNER JOIN symptom_metadata sm ON sm.check_in_id = c.check_in_id "
+						+ "INNER JOIN symptom s ON s.symptom_code = sm.symptom_code "
+						+ "INNER JOIN negative_experience n ON n.report_id = o.report_id "
+						+ "WHERE s.name = 'Heart' AND n.description  = NULL");
+
+				System.out.println("Facility Name");
+				while (rs.next()) {
+					System.out.println(rs.getString(1));
+				}
 
 			} else if (choice == 5) {
 				rs = stmt.executeQuery(
@@ -395,9 +423,18 @@ public class Application {
 								+ " AND O.REPORT_ID = N.REPORT_ID GROUP BY M.FACILITY_ID ORDER BY NEG DESC"
 
 				);
+
 				System.out.println("Facility Name		Count");
 				rs.next();
-				System.out.println(rs.getString(1) + "			" + rs.getString(2));
+				String facility = rs.getString(1);
+				String count = rs.getString(2);
+
+				ResultSet rs2 = stmt.executeQuery("SELECT NAME FROM MEDICAL_FACILITY WHERE FACILITY_ID = " + facility);
+				rs2.next();
+				String name = rs2.getString(1);
+
+				System.out.println(name + " 		   " + count);
+				rs2.close();
 			} else if (choice == 6) {
 				rs = stmt.executeQuery(
 						"SELECT \"patient_name\", \"date\", \"facility_name\", \"duration\", \"names\" FROM("
