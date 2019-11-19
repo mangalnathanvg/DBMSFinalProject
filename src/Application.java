@@ -1246,25 +1246,27 @@ public class Application {
 			boolean prioritySelected = true;
 
 			while (prioritySelected) {
+				count = 0;
 				HashMap<Integer, Symptom> symptomList = new HashMap<Integer, Symptom>();
 				RuleSymptom ruleSym = new RuleSymptom();
 
 				for (Map.Entry<String, Symptom> symptom : symptoms.entrySet()) {
-					symptomList.put(++count, symptom.getValue());
+					count++;
+					symptomList.put(count, symptom.getValue());
 				}
 				System.out.println("Choose symptom");
 				for (Map.Entry<Integer, Symptom> symptom : symptomList.entrySet()) {
-					System.out.println(count + " : " + symptom.getValue().getName());
+					System.out.println(symptom.getKey() + " : " + symptom.getValue().getName());
 				}
 				System.out.println(count + 1 + " : Select Priority");
 				int choice = Integer.parseInt(br.readLine());
 				if (choice == count + 1) {
 					prioritySelected = selectPriority(ruleSymList, rule);
+					continue;
 				}
-				choice = readNumber(1, count);
+
 				String selectedSymptom = symptomList.get(choice).getSymptomCode();
 				ruleSym.setSymptom(symptomList.get(choice));
-
 				if (symptomList.get(choice).getBodyPart() == null) {
 					count = 0;
 					HashMap<Integer, BodyPart> partList = new HashMap<Integer, BodyPart>();
@@ -1282,13 +1284,13 @@ public class Application {
 				} else {
 					ruleSym.setBodyPart(symptomList.get(choice).getBodyPart());
 				}
-
+				System.out.println("step 3");
 				String selectedSeverityScale = null;
 				boolean flag = true;
 				if (symptoms.get(selectedSymptom).getSeverityScale() == null) {
 					System.out.println("No Severity Scale is associated with this Sysmptom. Choose one from below!");
 					while (flag) {
-						System.out.println("1. Present \n 2.Absent");
+						System.out.println("1. Present \n2. Absent");
 						choice = Integer.parseInt(br.readLine());
 						if (choice == 1) {
 							selectedSeverityScale = "Present";
@@ -1309,8 +1311,11 @@ public class Application {
 					loadSeverityScales();
 					count = 0;
 					HashMap<Integer, SeverityScaleValue> valueList = new HashMap<Integer, SeverityScaleValue>();
-					for (Map.Entry<Integer, SeverityScaleValue> value : severityScaleValues.entrySet())
-						valueList.put(++count, value.getValue());
+					for (Map.Entry<Integer, SeverityScaleValue> value : severityScaleValues.entrySet()) {
+						if (symptoms.get(selectedSymptom).getSeverityScale().getSeverityScaleId() == value.getValue()
+								.getSeverityScaleId())
+							valueList.put(++count, value.getValue());
+					}
 
 					for (Map.Entry<Integer, SeverityScaleValue> value : valueList.entrySet())
 						System.out.println(value.getKey() + " : " + value.getValue().getScaleValue());
@@ -1341,8 +1346,10 @@ public class Application {
 
 	private static boolean selectPriority(ArrayList<RuleSymptom> ruleSymlist, Rule rule) {
 		try {
-			if (ruleSymlist.size() == 0 || ruleSymlist.get(0).getSymptom() == null)
-				return false;
+			if (ruleSymlist.size() == 0 || ruleSymlist.get(0).getSymptom() == null) {
+				System.out.println("No Rules conditions are added. Add atleast one rule");
+				return true;
+			}
 			ResultSet rs;
 			PreparedStatement ps = null;
 			System.out.println("Enter Priority : H , L , Q");
@@ -1351,26 +1358,28 @@ public class Application {
 			while (isValid) {
 				priority = br.readLine().charAt(0);
 				if (!Arrays.asList('H', 'L', 'Q').contains(priority)) {
-					System.out.println("Enter valid comparsion symbol H , L , Q");
+					System.out.println("Enter valid priority H , L , Q");
 					isValid = true;
 				} else
 					isValid = false;
 			}
 
 			rule.setPriority(priority);
+			String[] primaryKey = { "RULE_ID" };
 			String sql = "INSERT INTO rule(priority) values ( to_char(?) )";
-			ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+			ps = conn.prepareStatement(sql, primaryKey);
 			ps.setString(1, String.valueOf(rule.getPriority()));
 			ps.executeUpdate();
-			rs = ps.getGeneratedKeys();
-			if (rs.next()) {
-				rule.setRuleId(rs.getInt(1));
+			ResultSet rs1 = ps.getGeneratedKeys();
+			if (rs1.next()) {
+				rule.setRuleId(rs1.getInt(1));
 			}
 
+			String[] primaryKey1 = { "RULE_SYMPTOM_ID" };
 			for (RuleSymptom ruleSym : ruleSymlist) {
 
 				sql = "INSERT INTO rule_symptom(comparison_symbol,symptom_code, scale_value_id, body_part_code) values ( to_char(?) , ? , ? , ?)";
-				ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+				ps = conn.prepareStatement(sql, primaryKey1);
 				ps.setString(1, String.valueOf(ruleSym.getComparisonSymbol()));
 				ps.setString(2, ruleSym.getSymptom().getSymptomCode());
 				ps.setInt(3, ruleSym.getScaleValue().getSeverityValueId());
@@ -1386,12 +1395,13 @@ public class Application {
 				ps.setInt(2, ruleSym.getRuleSymptomId());
 				rs = ps.executeQuery();
 			}
+			System.out.println("Rule generated Successfully");
 			loadRules();
 
 		} catch (Exception e) {
 			System.out.println("Error occured: " + e);
 		}
-		return true;
+		return false;
 
 	}
 
