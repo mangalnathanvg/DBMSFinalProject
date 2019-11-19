@@ -428,7 +428,7 @@ public class Application {
 				String name = rs2.getString(1);
 
 				System.out.println(name + " 		   " + count);
-
+				rs2.close();
 			} else if (choice == 6) {
 				rs = stmt.executeQuery(
 						"SELECT \"patient_name\", \"date\", \"facility_name\", \"duration\", \"names\" FROM("
