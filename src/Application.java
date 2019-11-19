@@ -399,7 +399,22 @@ public class Application {
 				rs.next();
 				System.out.println(rs.getString(1) + "			" + rs.getString(2));
 			} else if (choice == 6) {
+				rs = stmt.executeQuery(
+						"SELECT \"patient_name\", \"date\", \"facility_name\", \"duration\", \"names\" FROM("
+								+ "SELECT c.check_in_id, f.name \"facility_name\", p.first_name || ' ' || p.last_name \"patient_name\", (end_time-start_time)"
+								+ "\"duration\", TO_CHAR(c.start_time, 'YYYY-MM-DD') \"date\", rank() OVER(PARTITION BY c.facility_id ORDER BY(end_time-start_time) DESC) rank, sym.\"names\" "
+								+ "FROM check_in c INNER JOIN medical_facility f ON f.facility_id = c.facility_id INNER JOIN patient p ON p.patient_id = c.patient_id "
+								+ "LEFT JOIN( SELECT ck.check_in_id, LISTAGG(s.name, ',') WITHIN GROUP(ORDER BY s.name) \"names\" FROM check_in ck INNER JOIN symptom_metadata m "
+								+ "ON ck.check_in_id = m.check_in_id INNER JOIN symptom s ON s.symptom_code = m.symptom_code GROUP BY ck.check_in_id ORDER BY ck.check_in_id) sym "
+								+ "ON sym.check_in_id = c.check_in_id ) WHERE rank<5");
 
+				System.out.println(
+						"Patient Name			    Date			Facility Name		 		Duration 					Names");
+
+				while (rs.next()) {
+					System.out.println(rs.getString(1) + "			" + rs.getString(2) + "			" + rs.getString(3)
+							+ "			" + rs.getString(4) + "				" + rs.getString(5));
+				}
 			} else if (choice == 7) {
 				break;
 			}
