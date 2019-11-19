@@ -332,8 +332,9 @@ public class Application {
 			sb.append("2. Find facilities that did not have a negative experience for a specific period \n");
 			sb.append("3. \n");
 			sb.append("4. \n");
-			sb.append("5. \n");
-			sb.append("6. \n");
+			sb.append("5. Find the facility with the most number of negative experiences\n");
+			sb.append(
+					"6. Find each facility, list the patient encounters with the top five longest check-in phases \n");
 			sb.append("7. Exit\n");
 			System.out.println(sb.toString());
 
@@ -388,7 +389,15 @@ public class Application {
 			} else if (choice == 4) {
 
 			} else if (choice == 5) {
+				rs = stmt.executeQuery(
+						"SELECT M.FACILITY_ID, COUNT(PC.CHECK_IN_ID) AS NEG FROM MEDICAL_FACILITY M, CHECK_IN PC,"
+								+ "NEGATIVE_EXPERIENCE N, OUTCOME_REPORT O WHERE M.FACILITY_ID = PC.FACILITY_ID AND PC.CHECK_IN_ID = O.CHECK_IN_ID"
+								+ " AND O.REPORT_ID = N.REPORT_ID GROUP BY M.FACILITY_ID ORDER BY NEG DESC"
 
+				);
+				System.out.println("Facility Name		Count");
+				rs.next();
+				System.out.println(rs.getString(1) + "			" + rs.getString(2));
 			} else if (choice == 6) {
 
 			} else if (choice == 7) {
