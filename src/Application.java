@@ -292,9 +292,7 @@ public class Application {
 			if (choice == 1) {
 				displaySignIn();
 			} else if (choice == 2) {
-//				displaySignUp();
-//				treatedPatient();
-				addAssessmentRule();
+				displaySignUp();
 			} else if (choice == 3) {
 				displayDemoQueries();
 			} else if (choice == 4) {
@@ -304,7 +302,54 @@ public class Application {
 
 	}
 
-	private static void displayDemoQueries() {
+	private static void displayDemoQueries() throws Exception {
+		int choice = 0;
+		StringBuilder sb = null;
+		Statement stmt = conn.createStatement();
+		ResultSet rs = null;
+		System.out.println("DEMO QUERIES");
+		while (true) {
+			sb = new StringBuilder();
+			sb.append("\nPlease choose Query from the below options:\n");
+			sb.append("1. Find all patients that were discharged but had negative experiences at any facility\n");
+			sb.append("2. Find facilities that did not have a negative experience for a specific period \n");
+			sb.append("3. \n");
+			sb.append("4. \n");
+			sb.append("5. \n");
+			sb.append("6. \n");
+			sb.append("7. Exit\n");
+			System.out.println(sb.toString());
+
+			choice = readNumber(1, 7);
+
+			if (choice == 1) {
+				rs = stmt.executeQuery(
+						"SELECT p.first_name , p.last_name , c.start_time, otr.generation_time, ne.description "
+								+ "FROM patient p INNER JOIN check_in c ON p.patient_id = c.patient_id "
+								+ "INNER JOIN outcome_report otr ON c.check_in_id = otr.check_in_id "
+								+ "INNER JOIN negative_experience ne ON otr.report_id = ne.report_id "
+								+ "WHERE otr.patient_confirmation IS NOT NULL");
+
+				System.out.println("First_Name	Last_Name	Check-In Date	Discharge Date	Negative experiences");
+				while (rs.next()) {
+					System.out.println(rs.getString(1) + "	" + rs.getString(2) + "	" + rs.getTimestamp(3) + "	"
+							+ rs.getTimestamp(4) + "	" + rs.getString(5));
+				}
+
+			} else if (choice == 2) {
+
+			} else if (choice == 3) {
+
+			} else if (choice == 4) {
+
+			} else if (choice == 5) {
+
+			} else if (choice == 6) {
+
+			} else if (choice == 7) {
+				break;
+			}
+		}
 
 	}
 
