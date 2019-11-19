@@ -330,8 +330,8 @@ public class Application {
 			sb.append("\nPlease choose Query from the below options:\n");
 			sb.append("1. Find all patients that were discharged but had negative experiences at any facility\n");
 			sb.append("2. Find facilities that did not have a negative experience for a specific period \n");
-			sb.append("3. \n");
-			sb.append("4. \n");
+			sb.append("3.  For each facility, find the facility that sends the most referrals to.\n");
+			sb.append("4. Find facilities that had no negative experience for patients with cardiac symptoms\n");
 			sb.append("5. Find the facility with the most number of negative experiences\n");
 			sb.append(
 					"6. Find each facility, list the patient encounters with the top five longest check-in phases \n");
