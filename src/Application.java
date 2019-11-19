@@ -417,9 +417,18 @@ public class Application {
 								+ " AND O.REPORT_ID = N.REPORT_ID GROUP BY M.FACILITY_ID ORDER BY NEG DESC"
 
 				);
-				System.out.println("Facility Name		Count");
+
+				System.out.println("Facility ID		Count");
 				rs.next();
-				System.out.println(rs.getString(1) + "			" + rs.getString(2));
+				String facility = rs.getString(1);
+				String count = rs.getString(2);
+
+				ResultSet rs2 = stmt.executeQuery("SELECT NAME FROM MEDICAL_FACILITY WHERE FACILITY_ID = " + facility);
+				rs2.next();
+				String name = rs2.getString(1);
+
+				System.out.println(name + " 		   " + count);
+
 			} else if (choice == 6) {
 				rs = stmt.executeQuery(
 						"SELECT \"patient_name\", \"date\", \"facility_name\", \"duration\", \"names\" FROM("
