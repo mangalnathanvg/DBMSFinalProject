@@ -385,8 +385,30 @@ public class Application {
 				}
 
 			} else if (choice == 3) {
+				rs = stmt.executeQuery(
+						"Select s.referedId, max(count) from (select c.facility_id as referedId, r.facility_id as referred_facility_id, "
+								+ "COUNT(r.facility_id) as count from referral_status r inner join outcome_report o on o.referral_id = r.referral_id inner join "
+								+ "check_in c on c.check_in_id = o.check_in_id inner join medical_facility f on f.facility_id = r.facility_id group by c.facility_id, "
+								+ "r.facility_id) s, medical_facility mf where s.referedId = mf.facility_id  group by s.referedId");
+				System.out.println("Referred facility          Count");
+				while (rs.next()) {
+					System.out.println(rs.getString(1) + "	     " + rs.getString(2));
+				}
 
 			} else if (choice == 4) {
+				rs = stmt.executeQuery("SELECT f.name " + "FROM medical_facility f "
+						+ "INNER JOIN check_in c ON f.facility_id = c.facility_id "
+						+ "INNER JOIN patient p ON p.patient_id = c.patient_id "
+						+ "INNER JOIN outcome_report o ON o.check_in_id = c.check_in_id "
+						+ "INNER JOIN symptom_metadata ON sm.check_in_id = c.check_in_id "
+						+ "INNER JOIN symptom s ON s.symptom_code = sm.symptom_code "
+						+ "INNER JOIN negative_experience n ON n.report_id = o.report_id "
+						+ "WHERE s.name = 'Heart' AND n.description  = NULL");
+
+				System.out.println("Facility Name");
+				while (rs.next()) {
+					System.out.println(rs.getString(1));
+				}
 
 			} else if (choice == 5) {
 				rs = stmt.executeQuery(
