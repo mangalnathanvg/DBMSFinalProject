@@ -268,6 +268,22 @@ public class Application {
 		return dt;
 	}
 
+	private static java.sql.Timestamp validateTimeStamp() {
+		java.sql.Timestamp timeStamp = null;
+		while (true) {
+			try {
+				timeStamp = java.sql.Timestamp.valueOf(br.readLine());
+			} catch (Exception e) {
+				System.out.println("Please enter a valid timestamp in the specified format yyyy-MM-dd hh:mm:ss:");
+			}
+			if (timeStamp != null) {
+				break;
+			}
+		}
+		return timeStamp;
+
+	}
+
 	private static void displayHome() throws Exception {
 		int choice = 0;
 		StringBuilder sb = null;
@@ -301,6 +317,7 @@ public class Application {
 		StringBuilder sb = null;
 		Statement stmt = conn.createStatement();
 		ResultSet rs = null;
+		String sql = null;
 		System.out.println("DEMO QUERIES");
 		while (true) {
 			sb = new StringBuilder();
@@ -324,6 +341,11 @@ public class Application {
 								+ "INNER JOIN negative_experience ne ON otr.report_id = ne.report_id "
 								+ "WHERE otr.patient_confirmation IS NOT NULL");
 
+				if (!rs.isBeforeFirst()) {
+					System.out.println("Query returns no rows!");
+					continue;
+				}
+
 				System.out.println("First_Name	Last_Name	Check-In Date	Discharge Date	Negative experiences");
 				while (rs.next()) {
 					System.out.println(rs.getString(1) + "	" + rs.getString(2) + "	" + rs.getTimestamp(3) + "	"
@@ -331,6 +353,29 @@ public class Application {
 				}
 
 			} else if (choice == 2) {
+				java.sql.Timestamp startTime = null;
+				java.sql.Timestamp endTime = null;
+
+				System.out.println("Enter Start Time in format yyyy-MM-dd hh:mm:ss:");
+				startTime = validateTimeStamp();
+				System.out.println("Enter End Time in format yyyy-MM-dd hh:mm:ss: ");
+				endTime = validateTimeStamp();
+
+				sql = "select mft.name from medical_facility mft "
+						+ "where mft.facility_id NOT IN ( select c.facility_id from check_in c, outcome_report otr, negative_experience ne "
+						+ "where c.check_in_id = otr.check_in_id and otr.report_id = ne.report_id "
+						+ "and otr.generation_time between ? and ?)";
+				PreparedStatement ps = conn.prepareStatement(sql);
+				ps.setTimestamp(1, startTime);
+				ps.setTimestamp(2, endTime);
+				rs = ps.executeQuery();
+				if (!rs.isBeforeFirst()) {
+					System.out.println("Query returns no rows!");
+					continue;
+				}
+				while (rs.next()) {
+					System.out.println(rs.getString(1));
+				}
 
 			} else if (choice == 3) {
 
