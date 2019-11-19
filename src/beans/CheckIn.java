@@ -82,6 +82,7 @@ public class CheckIn {
 
 	public ArrayList<SymptomMetadata> getSymptomMetadata(Connection conn) throws SQLException {
 		if (metadata == null) {
+			metadata = new ArrayList<SymptomMetadata>();
 			String sql = "SELECT * from symptom_metadata where check_in_id = ?";
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setInt(1, checkInId);
@@ -90,6 +91,7 @@ public class CheckIn {
 			while (rs.next()) {
 				SymptomMetadata symptomMetadata = new SymptomMetadata();
 				symptomMetadata.load(rs);
+				metadata.add(symptomMetadata);
 			}
 			rs.close();
 			ps.close();

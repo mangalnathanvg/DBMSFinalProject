@@ -217,7 +217,7 @@ public class Application {
 				} else if (sym == '<' && (line.length() > size)) {
 					System.out.println("Please enter a valid choice with size < " + size + ":");
 				}
-				break;
+				continue;
 			} else if (choice != -1) {
 				break;
 			}
@@ -427,14 +427,14 @@ public class Application {
 
 			System.out.println("Patient? (y/n):");
 			String[] options = new String[] { "n", "y" };
-			char patient = 'y';// readString(options).charAt(0);
+			char patient = 'n';// readString(options).charAt(0);
 			boolean isPatient = (patient == 'y' || patient == 'Y');
 			if (isPatient) {
 				System.out.println("Last Name:");
 			} else {
 				System.out.println("Name:");
 			}
-			name = "mathews";// br.readLine();
+			name = "zach";// br.readLine();
 
 			System.out.println("Date of birth (YYYY-MM-DD):");
 			Date dateOfBirth = Date.valueOf("1993-01-27");// readDate();
@@ -550,7 +550,6 @@ public class Application {
 			} else if (choice == 5) {
 				addAssessmentRule();
 			} else if (choice == 6) {
-				System.out.println("Invalid choice.\n");
 				break;
 			}
 		}
@@ -564,8 +563,8 @@ public class Application {
 		CheckIn selectedCheckIn = null;
 
 		// Display list of patients who have finished self check-in
-		String sql = "SELECT C.check_in_id, P.first_name, P.last_name, P.date_of_birth, P.phone_number, C.start_time FROM check_in C INNER JOIN patient P "
-				+ "ON P.patient_id = C.patient_id LEFT JOIN treatment t ON t.check_in_id = c.check_in_id LEFT JOIN vital_signs v ON  v.check_in_id = c.check_in_id WHERE t.check_in_id IS NULL AND c.facility_id = ?";
+		String sql = "SELECT * FROM check_in C INNER JOIN patient P "
+				+ "ON P.patient_id = C.patient_id LEFT JOIN treatment t ON t.check_in_id = c.check_in_id LEFT JOIN vital_signs v ON v.check_in_id = c.check_in_id WHERE t.check_in_id IS NULL AND c.facility_id = ?";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		ps.setInt(1, checkedInStaff.getPrimaryDepartment(conn).getFacilityId());
 		ResultSet rs = ps.executeQuery();
@@ -584,27 +583,28 @@ public class Application {
 			System.out.println("Choose patient from the list");
 			choice = readNumber(1, checkedInPatientList.size());
 			selectedCheckIn = checkedInPatientList.get(choice - 1);
-			sb = new StringBuilder();
-			sb.append("1. Enter Vitals\n");
-			sb.append("2. Treat Patient\n");
-			sb.append("3. Go back\n");
-
-			System.out.println(sb.toString());
-			choice = readNumber(1, 2);
 
 			while (true) {
+				sb = new StringBuilder();
+				sb.append("1. Enter Vitals\n");
+				sb.append("2. Treat Patient\n");
+				sb.append("3. Go back\n");
+
+				System.out.println(sb.toString());
+				choice = readNumber(1, 3);
 				if (choice == 1) {
-					if (selectedCheckIn.getVitalSigns().getCheckInID() != 0) {
+					if (selectedCheckIn.getVitalSigns().getCheckInID() == 0) {
 						staffEnterVitals(selectedCheckIn);
 					} else {
 						System.out.println("Vitals already entered for patient.");
 					}
 				} else if (choice == 2) {
 					boolean treatable = false;
-					ArrayList<String> treatableBodyParts = checkedInStaff.getTreatableBodyParts(conn);
+					ArrayList<String> treatableBodyParts = checkedInStaff.getTreatableBodyParts(conn, bodyParts);
 					ArrayList<SymptomMetadata> metadata = selectedCheckIn.getSymptomMetadata(conn);
 					for (SymptomMetadata metadatum : metadata) {
-						if (treatableBodyParts.contains(metadatum.getBodyPartCode())) {
+						if (metadatum.getBodyPartCode() == null
+								|| treatableBodyParts.contains(metadatum.getBodyPartCode())) {
 							treatable = true;
 							break;
 						}
@@ -742,8 +742,8 @@ public class Application {
 	private static void displayPatientRouting(int facilityId) throws Exception {
 		System.out.println("\n===| Patient Routing |===\n");
 
-		CheckIn checkinUnderProcess = loadCheckinUnderProcess(checkedInPatient.getPatientId(), facilityId);
 		while (true) {
+			CheckIn checkinUnderProcess = loadCheckinUnderProcess(checkedInPatient.getPatientId(), facilityId);
 			System.out.println("\nPlease choose one of the following options:\n");
 			StringBuilder sb = new StringBuilder();
 			sb.append("1. Check-in\n");
@@ -763,7 +763,8 @@ public class Application {
 					displayPatientCheckIn(checkinUnderProcess);
 				}
 			} else if (choice == 2) {
-				if ((checkinUnderProcess == null || checkinUnderProcess.getTreatment().getTreatmentTime() == null)) {
+				if (checkinUnderProcess == null || checkinUnderProcess.getTreatment() == null
+						|| checkinUnderProcess.getTreatment().getTreatmentTime() == null) {
 					System.out.println("Cannot checkout without being treated.");
 				} else {
 					displayPatientAcknowledgement(checkinUnderProcess);
@@ -873,6 +874,7 @@ public class Application {
 				}
 				int choice = readNumber(1, bodyPartList.size());
 				BodyPart bodyPart = bodyPartList.get(choice - 1);
+				System.out.println(symptom.getBodyPart().getBodyPartCode() + " - " + bodyPart.getName());
 				metadata.setBodyPartCode(bodyPart.getBodyPartCode());
 			}
 		} else {
@@ -901,7 +903,8 @@ public class Application {
 			}
 			int choice = readNumber(1, severityValueList.size());
 			SeverityScaleValue severityValue = severityValueList.get(choice - 1);
-			metadata.setSeverityScaleValueId(severityValue.getSeverityScaleId());
+//			System.out.println(severityScale.getSeverityScaleId() + " " + severityValue.getScaleValue());
+			metadata.setSeverityScaleValueId(severityValue.getSeverityValueId());
 		}
 
 		System.out.println("Cause:");

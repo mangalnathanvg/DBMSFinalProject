@@ -49,7 +49,7 @@ public class Symptom {
 	}
 
 	public boolean hasBodyPart() {
-		return bodyPart == null;
+		return bodyPart != null;
 	}
 
 	public void load(ResultSet rs, HashMap<String, BodyPart> bodyParts, HashMap<Integer, SeverityScale> severityScales)

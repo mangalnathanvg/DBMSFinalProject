@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Staff {
 
@@ -107,7 +108,8 @@ public class Staff {
 		hireDate = rs.getDate("hire_date");
 	}
 
-	public ArrayList<String> getTreatableBodyParts(Connection conn) throws SQLException {
+	public ArrayList<String> getTreatableBodyParts(Connection conn, HashMap<String, BodyPart> bodyParts)
+			throws SQLException {
 		ArrayList<String> bodyPartCodes = new ArrayList<String>();
 		String sql = "SELECT body_part_code FROM department_speciality ds INNER JOIN service_department sd on sd.department_code = ds.department_code "
 				+ "INNER JOIN medical_staff ms on ms.primary_department_code = sd.department_code WHERE ms.medical_staff_id = ? "
@@ -121,6 +123,9 @@ public class Staff {
 		ResultSet rs = ps.getResultSet();
 		while (rs.next()) {
 			bodyPartCodes.add(rs.getString("body_part_code"));
+		}
+		if (bodyPartCodes.size() == 0) {
+			bodyPartCodes.addAll(bodyParts.keySet());
 		}
 		return bodyPartCodes;
 	}
