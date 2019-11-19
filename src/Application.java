@@ -400,7 +400,7 @@ public class Application {
 						+ "INNER JOIN check_in c ON f.facility_id = c.facility_id "
 						+ "INNER JOIN patient p ON p.patient_id = c.patient_id "
 						+ "INNER JOIN outcome_report o ON o.check_in_id = c.check_in_id "
-						+ "INNER JOIN symptom_metadata ON sm.check_in_id = c.check_in_id "
+						+ "INNER JOIN symptom_metadata sm ON sm.check_in_id = c.check_in_id "
 						+ "INNER JOIN symptom s ON s.symptom_code = sm.symptom_code "
 						+ "INNER JOIN negative_experience n ON n.report_id = o.report_id "
 						+ "WHERE s.name = 'Heart' AND n.description  = NULL");
