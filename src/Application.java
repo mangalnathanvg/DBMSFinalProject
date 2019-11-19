@@ -216,10 +216,10 @@ public class Application {
 					System.out.println("Please enter a valid choice with size = " + size + ":");
 				} else if (sym == '<' && (line.length() > size)) {
 					System.out.println("Please enter a valid choice with size < " + size + ":");
+				} else {
+					break;
 				}
 				continue;
-			} else if (choice != -1) {
-				break;
 			}
 		}
 
@@ -1273,7 +1273,7 @@ public class Application {
 				f = true;
 
 				while (f) {
-					System.out.println("Enter the order of the scale value" + scname + " (Numeric):");
+					System.out.println("Enter the order of the scale value " + scname + " (Numeric):");
 					temp = br.readLine();
 					try {
 						int a = Integer.parseInt(temp);
@@ -1367,7 +1367,6 @@ public class Application {
 			}
 			System.out.println(count + 1 + " : Select Priority");
 			choice = Integer.parseInt(br.readLine());
-			choice = readNumber(1, count + 1);
 			if (choice == count + 1) {
 				prioritySelected = selectPriority(ruleSymList, rule);
 				continue;
@@ -1381,39 +1380,19 @@ public class Application {
 				for (Map.Entry<String, BodyPart> part : bodyParts.entrySet()) {
 					partList.put(++count, part.getValue());
 				}
-
+//				System.out.println(symptomList.get(choice).getName());
 				System.out.println("No Body is associated with the symtom. Choose body part of your choice!");
 				for (Map.Entry<Integer, BodyPart> part : partList.entrySet()) {
 					System.out.println(part.getKey() + " : " + part.getValue().getName());
 				}
-//					choice = Integer.parseInt(br.readLine());
 				choice = readNumber(1, count);
 				ruleSym.setBodyPart(partList.get(choice));
 			} else {
 				ruleSym.setBodyPart(symptomList.get(choice).getBodyPart());
 			}
-			System.out.println("step 3");
-			String selectedSeverityScale = null;
-			boolean flag = true;
 			if (symptoms.get(selectedSymptom).getSeverityScale() == null) {
-				System.out.println("No Severity Scale is associated with this Sysmptom. Choose one from below!");
-				while (flag) {
-					System.out.println("1. Present \n2. Absent");
-//						choice = Integer.parseInt(br.readLine());
-					choice = readNumber(1, 2);
-					if (choice == 1) {
-						selectedSeverityScale = "Present";
-						flag = false;
-					} else if (choice == 2) {
-						selectedSeverityScale = "Absent";
-						flag = false;
-					} else {
-						System.out.println("Choose a valid Symptom");
-						flag = true;
-					}
-				}
 				for (Map.Entry<Integer, SeverityScaleValue> value : severityScaleValues.entrySet()) {
-					if (value.getValue().getScaleValue() == selectedSeverityScale)
+					if (value.getValue().getScaleValue() == "Present")
 						ruleSym.setScaleValue(value.getValue());
 				}
 			} else {
@@ -1429,7 +1408,6 @@ public class Application {
 				for (Map.Entry<Integer, SeverityScaleValue> value : valueList.entrySet())
 					System.out.println(value.getKey() + " : " + value.getValue().getScaleValue());
 
-//				choice = Integer.parseInt(br.readLine());
 				choice = readNumber(1, count);
 				ruleSym.setScaleValue(valueList.get(choice));
 			}
@@ -1454,18 +1432,18 @@ public class Application {
 	private static boolean selectPriority(ArrayList<RuleSymptom> ruleSymlist, Rule rule) {
 		try {
 			if (ruleSymlist.size() == 0 || ruleSymlist.get(0).getSymptom() == null) {
-				System.out.println("No Rules conditions are added. Add atleast one rule");
+				System.out.println("No Rules conditions are added. Add atleast one rule.");
 				return true;
 			}
 			ResultSet rs;
 			PreparedStatement ps = null;
-			System.out.println("Enter Priority : H , L , Q");
+			System.out.println("Enter Priority : H , N , Q");
 			boolean isValid = true;
 			char priority = 0;
 			while (isValid) {
 				priority = br.readLine().charAt(0);
-				if (!Arrays.asList('H', 'L', 'Q').contains(priority)) {
-					System.out.println("Enter valid priority H , L , Q");
+				if (!Arrays.asList('H', 'N', 'Q').contains(priority)) {
+					System.out.println("Enter valid priority H , N , Q");
 					isValid = true;
 				} else
 					isValid = false;
@@ -1513,10 +1491,6 @@ public class Application {
 	}
 
 	private static void treatedPatient() throws Exception {
-//		if (checkedInStaff == null) {
-//			System.out.println("Medical staff is not logined In");
-//			displayHome();
-//		}
 		StringBuilder sb = null;
 		int choice = 0;
 		int counter = 0;
@@ -1531,21 +1505,21 @@ public class Application {
 		HashMap<Integer, Integer> treatedPatientList = new HashMap<>();
 		while (rs.next()) {
 			counter++;
-			System.out.println(
-					counter + ": " + checkedInStaff.getStaffId() + " " + rs.getString(3) + " " + rs.getString(4));
+			System.out.println(counter + ": " + rs.getInt(2) + " " + rs.getString(3) + " " + rs.getString(4));
 			treatedPatientList.put(counter, rs.getInt(2));
 		}
 
 		if (counter > 0) {
 			System.out.println("Choose patient from the list\n");
-			choice = Integer.parseInt(br.readLine());
+			choice = readNumber(1, counter);
+			int selectedCheckInId = treatedPatientList.get(choice);
 			sb = new StringBuilder();
 			sb.append("1. Checkout\n");
 			sb.append("2. Go back\n");
 			System.out.println(sb.toString());
 			choice = readNumber(1, 2);
 			if (choice == 1) {
-				patientCheckout();
+				patientCheckout(selectedCheckInId);
 			}
 		} else if (counter == 0) {
 			System.out.println("List has no patients to show");
@@ -1554,11 +1528,12 @@ public class Application {
 		ps.close();
 	}
 
-	private static void patientCheckout() {
+	private static void patientCheckout(int checkInId) {
 		StringBuilder sb = null;
 		int choice = 0;
 		boolean flag = true;
 		OutcomeReport report = new OutcomeReport();
+		report.setCheckInId(checkInId);
 
 		try {
 			while (flag) {
@@ -1622,6 +1597,8 @@ public class Application {
 	}
 
 	private static boolean displayStaffReportConfirmation(OutcomeReport report) throws Exception {
+		displayReport(report);
+
 		System.out.println("\nPlease choose one of the following options:\n");
 		StringBuilder sb = new StringBuilder();
 		sb.append("1. Confirm\n");
@@ -1671,9 +1648,12 @@ public class Application {
 	private static void addReferralStatus(OutcomeReport report) throws Exception {
 		int choice = 0;
 		int facilityId = 0;
+		ReferralStatus referralStatus = report.getReferralStatus(conn);
 
-		ReferralStatus referralStatus = new ReferralStatus();
-		report.setReferralStatus(referralStatus);
+		if (referralStatus == null) {
+			referralStatus = new ReferralStatus();
+			report.setReferralStatus(referralStatus);
+		}
 
 		System.out.println("\n===| Referral Status |===\n");
 

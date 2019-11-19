@@ -29,6 +29,14 @@ public class OutcomeReport {
 		this.reportId = reportId;
 	}
 
+	public int getCheckInId() {
+		return checkInId;
+	}
+
+	public void setCheckInId(int checkInId) {
+		this.checkInId = checkInId;
+	}
+
 	public char getDischargeStatus() {
 		return dischargeStatus;
 	}
@@ -86,7 +94,7 @@ public class OutcomeReport {
 			break;
 		case 'R':
 		case 'r':
-			name = "Referred).";
+			name = "Referred";
 			break;
 		}
 		return name;
@@ -146,8 +154,8 @@ public class OutcomeReport {
 	public void save(Connection conn) throws Exception {
 		PreparedStatement ps = null;
 		if (reportId == 0) {
-			String sql = "INSERT INTO outcome_report(discharge_status,treatment_description, patient_confirmation,generation_time,referral_id,feedback_id) "
-					+ "VALUES (to_char(?),?,?,?,?,?)";
+			String sql = "INSERT INTO outcome_report(discharge_status,treatment_description, patient_confirmation,generation_time,referral_id,feedback_id,check_in_id) "
+					+ "VALUES (to_char(?),?,?,?,?,?,?)";
 			String[] primaryKey = { "report_id" };
 			ps = conn.prepareStatement(sql, primaryKey);
 		} else {
@@ -156,13 +164,17 @@ public class OutcomeReport {
 			ps = conn.prepareStatement(sql);
 			ps.setInt(7, reportId);
 		}
-		System.out.println("*" + dischargeStatus + "*");
-		ps.setInt(1, dischargeStatus);
+		ps.setString(1, "" + dischargeStatus);
 		ps.setString(2, treatmentDescription);
 		ps.setInt(3, patientConfirmation);
 		ps.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
 		ps.setInt(5, referralId);
-		ps.setInt(6, feedbackId);
+		if (feedbackId == 0) {
+			ps.setNull(6, java.sql.Types.INTEGER);
+		} else {
+			ps.setInt(6, feedbackId);
+		}
+		ps.setInt(7, checkInId);
 		ps.executeUpdate();
 		if (reportId == 0) {
 			ResultSet rs = ps.getGeneratedKeys();
