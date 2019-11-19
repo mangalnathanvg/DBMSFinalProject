@@ -418,7 +418,7 @@ public class Application {
 
 				);
 
-				System.out.println("Facility ID		Count");
+				System.out.println("Facility Name		Count");
 				rs.next();
 				String facility = rs.getString(1);
 				String count = rs.getString(2);
