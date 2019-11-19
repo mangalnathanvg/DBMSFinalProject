@@ -292,7 +292,9 @@ public class Application {
 			if (choice == 1) {
 				displaySignIn();
 			} else if (choice == 2) {
-				displaySignUp();
+//				displaySignUp();
+//				treatedPatient();
+				addAssessmentRule();
 			} else if (choice == 3) {
 				displayDemoQueries();
 			} else if (choice == 4) {
@@ -1244,6 +1246,7 @@ public class Application {
 			ArrayList<RuleSymptom> ruleSymList = new ArrayList<RuleSymptom>();
 			Rule rule = new Rule();
 			boolean prioritySelected = true;
+			int choice;
 
 			while (prioritySelected) {
 				count = 0;
@@ -1259,7 +1262,8 @@ public class Application {
 					System.out.println(symptom.getKey() + " : " + symptom.getValue().getName());
 				}
 				System.out.println(count + 1 + " : Select Priority");
-				int choice = Integer.parseInt(br.readLine());
+				choice = Integer.parseInt(br.readLine());
+				choice = readNumber(1, count + 1);
 				if (choice == count + 1) {
 					prioritySelected = selectPriority(ruleSymList, rule);
 					continue;
@@ -1278,7 +1282,7 @@ public class Application {
 					for (Map.Entry<Integer, BodyPart> part : partList.entrySet()) {
 						System.out.println(part.getKey() + " : " + part.getValue().getName());
 					}
-					choice = Integer.parseInt(br.readLine());
+//					choice = Integer.parseInt(br.readLine());
 					choice = readNumber(1, count);
 					ruleSym.setBodyPart(partList.get(choice));
 				} else {
@@ -1291,7 +1295,8 @@ public class Application {
 					System.out.println("No Severity Scale is associated with this Sysmptom. Choose one from below!");
 					while (flag) {
 						System.out.println("1. Present \n2. Absent");
-						choice = Integer.parseInt(br.readLine());
+//						choice = Integer.parseInt(br.readLine());
+						choice = readNumber(1, 2);
 						if (choice == 1) {
 							selectedSeverityScale = "Present";
 							flag = false;
@@ -1320,7 +1325,8 @@ public class Application {
 					for (Map.Entry<Integer, SeverityScaleValue> value : valueList.entrySet())
 						System.out.println(value.getKey() + " : " + value.getValue().getScaleValue());
 
-					choice = Integer.parseInt(br.readLine());
+//				choice = Integer.parseInt(br.readLine());
+					choice = readNumber(1, count);
 					ruleSym.setScaleValue(valueList.get(choice));
 				}
 
@@ -1406,16 +1412,20 @@ public class Application {
 	}
 
 	private static void treatedPatient() {
-		StringBuilder sb = null;
-		int choice = 0;
-		boolean flag = false;
-		int counter = 0;
-
 		try {
-			System.out.println("List of treated patients:\n");
-			String sql = "SELECT p.patient_id, ci.check_in_id, p.first_name, p.last_name FROM treatment trm INNER JOIN check_in ci "
-					+ "on trm.check_in_id = ci.check_in_id INNER JOIN patient p ON ci.patient_id=p.patient_id INNER JOIN outcome_report or "
-					+ "on or.check_in_id != ci.check_in_id " + "WHERE trm.medical_staff_id=?";
+			if (checkedInStaff == null) {
+				System.out.println("Medical staff is not logined In");
+				displayHome();
+			}
+			StringBuilder sb = null;
+			int choice = 0;
+			boolean flag = false;
+			int counter = 0;
+
+			String sql = "SELECT p.patient_id, ci.check_in_id, p.first_name, p.last_name FROM treatment trm "
+					+ "INNER JOIN check_in ci ON trm.check_in_id = ci.check_in_id "
+					+ "INNER JOIN patient p ON ci.patient_id = p.patient_id "
+					+ "INNER JOIN outcome_report r ON r.check_in_id != ci.check_in_id" + "WHERE trm.medical_staff_id=?";
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ps.setInt(1, checkedInStaff.getStaffId());
 			ResultSet rs = ps.executeQuery();
@@ -1425,15 +1435,15 @@ public class Application {
 				System.out.println(counter + ": " + rs.getString(3) + rs.getString(4));
 				treatedPatientList.put(counter, rs.getInt(2));
 			}
+
 			if (counter > 0) {
 				flag = true;
-				System.out.println("Choose patient from the list");
+				System.out.println("Choose patient from the list\n");
 				choice = Integer.parseInt(br.readLine());
 				sb = new StringBuilder();
 				sb.append("1. Checkout\n");
 				sb.append("2. Go back\n");
 				System.out.println(sb.toString());
-				choice = Integer.parseInt(br.readLine());
 				choice = readNumber(1, 2);
 				while (flag) {
 					if (choice == 1) {
