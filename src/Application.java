@@ -424,7 +424,7 @@ public class Application {
 
 				);
 
-				System.out.println("Facility ID		Count");
+				System.out.println("Facility Name		Count");
 				rs.next();
 				String facility = rs.getString(1);
 				String count = rs.getString(2);
@@ -434,7 +434,7 @@ public class Application {
 				String name = rs2.getString(1);
 
 				System.out.println(name + " 		   " + count);
-
+				rs2.close();
 			} else if (choice == 6) {
 				rs = stmt.executeQuery(
 						"SELECT \"patient_name\", \"date\", \"facility_name\", \"duration\", \"names\" FROM("
