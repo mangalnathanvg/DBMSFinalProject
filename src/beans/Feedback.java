@@ -30,7 +30,7 @@ public class Feedback {
 		String[] primaryKey = { "feedback_id" };
 		String sql = "INSERT INTO feedback(description) VALUES (?)";
 		PreparedStatement ps = conn.prepareStatement(sql, primaryKey);
-		ps.setString(8, description);
+		ps.setString(1, description);
 		ps.executeUpdate();
 		ResultSet rs = ps.getGeneratedKeys();
 		if (rs.next()) {

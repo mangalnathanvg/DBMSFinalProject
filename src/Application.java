@@ -496,20 +496,20 @@ public class Application {
 
 			System.out.println("Patient? (y/n):");
 			String[] options = new String[] { "n", "y" };
-			char patient = 'n';// readString(options).charAt(0);
+			char patient = readString(options).charAt(0);
 			boolean isPatient = (patient == 'y' || patient == 'Y');
 			if (isPatient) {
 				System.out.println("Last Name:");
 			} else {
 				System.out.println("Name:");
 			}
-			name = "zach";// br.readLine();
+			name = br.readLine();
 
 			System.out.println("Date of birth (YYYY-MM-DD):");
-			Date dateOfBirth = Date.valueOf("1993-01-27");// readDate();
+			Date dateOfBirth = readDate();
 
 			System.out.println("City of address:");
-			city = "raleigh";// br.readLine();
+			city = br.readLine();
 
 			System.out.println("\nPlease choose from the below options:");
 			sb = new StringBuilder();
@@ -862,14 +862,14 @@ public class Application {
 		int choice = readNumber(1, 3);
 		if (choice == 1) {
 			report.setPatientConfirmation(1);
-			report.save(conn);
+			report.save(conn, true);
 		} else if (choice == 2) {
 			Feedback feedback = new Feedback();
 			System.out.println("Please enter some feedback:");
 			feedback.setDescription(readNonEmptyString());
 			feedback.insert(conn);
 			report.setFeedbackId(feedback.getFeedbackId());
-			report.save(conn);
+			report.save(conn, false);
 		}
 	}
 
@@ -1631,7 +1631,7 @@ public class Application {
 				}
 				report.setReferralId(referralStatus.getReferralId());
 			}
-			report.save(conn);
+			report.save(conn, false);
 			NegativeExperience negativeExperience = report.getNegativeExperience(conn);
 			negativeExperience.setReportId(report.getReportId());
 			negativeExperience.insert(conn);

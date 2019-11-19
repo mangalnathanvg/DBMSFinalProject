@@ -129,9 +129,9 @@ public class OutcomeReport {
 
 	public NegativeExperience getNegativeExperience(Connection conn) throws SQLException {
 		if (experience == null) {
-			String sql = "SELECT * FROM referral_status WHERE referral_id = ?";
+			String sql = "SELECT * FROM negative_experience where report_id = ?";
 			PreparedStatement ps = conn.prepareStatement(sql);
-			ps.setInt(1, referralId);
+			ps.setInt(1, reportId);
 			ResultSet rs = ps.executeQuery();
 			if (rs.next()) {
 				experience = new NegativeExperience();
@@ -144,14 +144,14 @@ public class OutcomeReport {
 	public void load(ResultSet rs) throws SQLException {
 		reportId = rs.getInt("report_id");
 		referralId = rs.getInt("referral_id");
-		feedbackId = rs.getInt("feedbacIId");
+		feedbackId = rs.getInt("feedback_id");
 		checkInId = rs.getInt("check_in_id");
 		treatmentDescription = rs.getString("treatment_description");
 		dischargeStatus = rs.getString("discharge_status").charAt(0);
 		generationTime = rs.getTimestamp("generation_time");
 	}
 
-	public void save(Connection conn) throws Exception {
+	public void save(Connection conn, boolean b) throws Exception {
 		PreparedStatement ps = null;
 		if (reportId == 0) {
 			String sql = "INSERT INTO outcome_report(discharge_status,treatment_description, patient_confirmation,generation_time,referral_id,feedback_id,check_in_id) "
@@ -166,7 +166,11 @@ public class OutcomeReport {
 		}
 		ps.setString(1, "" + dischargeStatus);
 		ps.setString(2, treatmentDescription);
-		ps.setInt(3, patientConfirmation);
+		if (patientConfirmation == 0 && !b) {
+			ps.setNull(3, java.sql.Types.INTEGER);
+		} else {
+			ps.setInt(3, patientConfirmation);
+		}
 		ps.setTimestamp(4, new Timestamp(System.currentTimeMillis()));
 		ps.setInt(5, referralId);
 		if (feedbackId == 0) {
