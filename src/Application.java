@@ -390,10 +390,16 @@ public class Application {
 								+ "COUNT(r.facility_id) as count from referral_status r inner join outcome_report o on o.referral_id = r.referral_id inner join "
 								+ "check_in c on c.check_in_id = o.check_in_id inner join medical_facility f on f.facility_id = r.facility_id group by c.facility_id, "
 								+ "r.facility_id) s, medical_facility mf where s.referedId = mf.facility_id  group by s.referedId");
-				System.out.println("Referred facility          Count");
-				while (rs.next()) {
-					System.out.println(rs.getString(1) + "	     " + rs.getString(2));
-				}
+				System.out.println("Referred facility ID       Facility Name         Count");
+				rs.next();
+				String count = rs.getString(2);
+				String fid = rs.getString(1);
+
+				ResultSet rs2 = stmt.executeQuery("SELECT NAME FROM MEDICAL_FACILITY WHERE FACILITY_ID = " + fid);
+				rs2.next();
+				String name = rs2.getString(1);
+
+				System.out.println(fid + "          " + name + "      " + count);
 
 			} else if (choice == 4) {
 				rs = stmt.executeQuery("SELECT f.name " + "FROM medical_facility f "
