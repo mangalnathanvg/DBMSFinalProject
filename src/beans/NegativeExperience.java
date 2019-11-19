@@ -59,7 +59,7 @@ public class NegativeExperience {
 	}
 
 	public void insert(Connection conn) throws SQLException {
-		String sql = "INSERT INTO negative_experience(report_id,experience_code,description) VALUES (?,?,?);";
+		String sql = "INSERT INTO negative_experience(report_id,experience_code,description) VALUES (?,?,?)";
 		PreparedStatement ps = conn.prepareStatement(sql);
 		ps.setInt(1, reportId);
 		ps.setInt(2, experienceCode);

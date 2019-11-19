@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 public class Address {
 
@@ -84,8 +83,9 @@ public class Address {
 	}
 
 	public void save(Connection conn) throws SQLException {
-		String sql = "INSERT INTO address(add_number,street_name,city,state,country) VALUES (?,?,?,?,?);";
-		PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+		String[] primaryKey = { "address_id" };
+		String sql = "INSERT INTO address(add_number,street_name,city,state,country) VALUES (?,?,?,?,?)";
+		PreparedStatement ps = conn.prepareStatement(sql, primaryKey);
 		ps.setLong(1, addNumber);
 		ps.setString(2, streetName);
 		ps.setString(3, city);

@@ -66,8 +66,8 @@ public class VitalSigns {
 	public void load(ResultSet rs) throws SQLException {
 		checkInId = rs.getInt("check_in_id");
 		temperature = rs.getInt("temperature");
-		systolicPresure = rs.getInt("systolic_presure");
-		diastolicPressure = rs.getInt("diastolic_pressure");
+		systolicPresure = rs.getInt("SYSTOLIC_PRESSURE");
+		diastolicPressure = rs.getInt("DIASTOLIC_PRESSURE");
 		medicalStaffId = rs.getInt("medical_staff_id");
 	}
 

@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 
 public class OutcomeReport {
@@ -149,7 +148,8 @@ public class OutcomeReport {
 		if (reportId == 0) {
 			String sql = "INSERT INTO outcome_report(discharge_status,treatment_description, patient_confirmation,generation_time,referral_id,feedback_id) "
 					+ "VALUES (to_char(?),?,?,?,?,?)";
-			ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+			String[] primaryKey = { "report_id" };
+			ps = conn.prepareStatement(sql, primaryKey);
 		} else {
 			String sql = "UPDATE outcome_report SET discharge_status=?,treatment_description=?,"
 					+ "patient_confirmation=?,generation_time=?,referral_id=?,feedback_id=? WHERE report_id=?";

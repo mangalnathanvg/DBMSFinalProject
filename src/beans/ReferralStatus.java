@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 
 public class ReferralStatus {
@@ -72,8 +71,9 @@ public class ReferralStatus {
 	}
 
 	public void insert(Connection conn) throws SQLException {
-		String sql = "INSERT INTO referral_status(facilty_id,medical_staff_id) VALUES (?,?);";
-		PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+		String sql = "INSERT INTO referral_status(facilty_id,medical_staff_id) VALUES (?,?)";
+		String[] primaryKey = { "referral_id" };
+		PreparedStatement ps = conn.prepareStatement(sql, primaryKey);
 		ps.setInt(1, facilityId);
 		ps.setInt(2, medicalStaffId);
 

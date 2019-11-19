@@ -50,14 +50,16 @@ public class ServiceDepartment {
 		this.facilityId = facilityId;
 	}
 
-	public void load(ResultSet rs) throws SQLException {
+	public void load(ResultSet rs, boolean loadBodyParts) throws SQLException {
 		directorId = rs.getInt("director_id");
 		facilityId = rs.getInt("facility_id");
 		departmentCode = rs.getString("department_code");
 		name = rs.getString("name");
-		String bodyPartCode = rs.getString("body_part_code");
-		if (bodyPartCode != null && !bodyPartCode.isEmpty()) {
-			bodyParts.add(bodyPartCode);
+		if (loadBodyParts) {
+			String bodyPartCode = rs.getString("body_part_code");
+			if (bodyPartCode != null && !bodyPartCode.isEmpty()) {
+				bodyParts.add(bodyPartCode);
+			}
 		}
 	}
 }

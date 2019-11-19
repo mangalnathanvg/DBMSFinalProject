@@ -5,7 +5,6 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 
 public class Staff {
@@ -69,14 +68,28 @@ public class Staff {
 
 	public ServiceDepartment getPrimaryDepartment(Connection conn) throws SQLException {
 		if (primaryDepartment == null) {
-			Statement stmt = conn.createStatement();
-			ResultSet rs = stmt.executeQuery(
-					"SELECT * FROM service_department sd LEFT JOIN department_speciality ds ON sd.department_code = ds.department_code WHERE ds.department_code = "
-							+ primaryDeptCode);
+			StringBuilder sb = new StringBuilder();
+			String tablename = "";
+			sb.append("SELECT * FROM service_department sd ");
+			if (designation == 'M') {
+				tablename = "medical";
+			} else if (designation == 'N') {
+				tablename = "non_medical";
+			}
+
+			sb.append(
+					"INNER JOIN " + tablename + "_service_department msd on msd.department_code = sd.department_code ");
+			sb.append("INNER JOIN " + tablename + "_staff s on s.primary_department_code = msd.department_code ");
+			sb.append("WHERE s." + tablename + "_staff_id = ?");
+			PreparedStatement stmt = conn.prepareStatement(sb.toString());
+			stmt.setInt(1, staffId);
+			ResultSet rs = stmt.executeQuery();
 
 			while (rs.next()) {
-				primaryDepartment = new ServiceDepartment();
-				primaryDepartment.load(rs);
+				if (primaryDepartment == null) {
+					primaryDepartment = new ServiceDepartment();
+				}
+				primaryDepartment.load(rs, false);
 			}
 		}
 		return primaryDepartment;
