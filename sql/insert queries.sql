@@ -94,17 +94,17 @@ insert into medical_facility (name, capacity, classification, address_id) values
 insert into medical_facility (name, capacity, classification, address_id) values ('Suny Medical',10,1,27);
 
 --Done
-insert into facility_certification (acronym, facility_id) values ('CER001',1);
-insert into facility_certification (acronym, facility_id) values ('CER002',2);
-insert into facility_certification (acronym, facility_id) values ('CER003',3);
+insert into facility_certification (acronym, facility_id) values ('CER001',41);
+insert into facility_certification (acronym, facility_id) values ('CER002',42);
+insert into facility_certification (acronym, facility_id) values ('CER003',43);
 
 --Done
-insert into service_department (department_code,name, director_id, facility_id) values ('ER000','Emergency room', null , 1001);
-insert into service_department (department_code,name, director_id, facility_id) values ('GP000','General practice department', null, 1000);
-insert into service_department (department_code,name, director_id, facility_id) values ('GP001','General practice department', null , 1001);
-insert into service_department (department_code,name, director_id, facility_id) values ('OP000','Optometry', null , 1000);
-insert into service_department (department_code,name, director_id, facility_id) values ('SE000','Security', null , 1000);
-insert into service_department (department_code,name, director_id, facility_id) values ('ER001','Emergency room', null , 1002);
+insert into service_department (department_code,name, director_id, facility_id) values ('ER000','Emergency room', null , 41);
+insert into service_department (department_code,name, director_id, facility_id) values ('GP000','General practice department', null, 42);
+insert into service_department (department_code,name, director_id, facility_id) values ('GP001','General practice department', null , 43);
+insert into service_department (department_code,name, director_id, facility_id) values ('OP000','Optometry', null , 41);
+insert into service_department (department_code,name, director_id, facility_id) values ('SE000','Security', null , 42);
+insert into service_department (department_code,name, director_id, facility_id) values ('ER001','Emergency room', null , 43);
 
 --Done
 insert into department_speciality (department_code, body_part_code) values ('ER000','DUM000');
@@ -116,9 +116,9 @@ insert into department_speciality (department_code, body_part_code) values ('SE0
 
 
 --Done
-insert into service (service_code, name, equipment,facility_id) values ('SER01','Emergency','ER combo rack',21);
-insert into service (service_code, name, equipment,facility_id) values ('SGP01','General practice','Blood pressure monitor / thermometer',22);
-insert into service (service_code, name, equipment,facility_id) values ('VIS01','Vision','Vision Screener', 23);
+insert into service (service_code, name, equipment,facility_id) values ('SER01','Emergency','ER combo rack',41);
+insert into service (service_code, name, equipment,facility_id) values ('SGP01','General practice','Blood pressure monitor / thermometer',42);
+insert into service (service_code, name, equipment,facility_id) values ('VIS01','Vision','Vision Screener', 43);
 
 --Done
 insert into services_offered (service_code, department_code) values ('SER01', 'ER000');
@@ -127,15 +127,15 @@ insert into services_offered (service_code, department_code) values ('SGP01', 'G
 insert into services_offered (service_code, department_code) values ('VIS01', 'OP000');
 
 --Done
-insert into staff (name, designation, hire_date, date_of_birth, facility_id) values ('Medical Robot', 'Director', TO_DATE('2019-06-21','YYYY-MM-DD') ,TO_DATE('1989-04-19','YYYY-MM-DD'), 8);
-insert into staff (name, designation, hire_date, date_of_birth, facility_id) values ('Musical Robert', 'Director',TO_DATE('2018-08-29','YYYY-MM-DD') , TO_DATE('1993-01-29','YYYY-MM-DD') , 9);
-insert into staff (name, designation, hire_date, date_of_birth, facility_id) values ('Muscular Rob', 'Director',TO_DATE('1993-10-12','YYYY-MM-DD') , TO_DATE('1967-12-09','YYYY-MM-DD') , 10);
-insert into staff (name, designation, hire_date, date_of_birth, facility_id) values ('Mechanical Roboto', 'General', TO_DATE('2019-06-21','YYYY-MM-DD'), TO_DATE('1988-05-18','YYYY-MM-DD'),11);
-insert into staff (name, designation, hire_date, date_of_birth, facility_id) values ('Millennium Roberten', 'Director', TO_DATE('2018-09-20','YYYY-MM-DD'), TO_DATE('1991-06-28','YYYY-MM-DD') , 12);
-insert into staff (name, designation, hire_date, date_of_birth, facility_id) values ('Missionary Robinson', 'General', TO_DATE('1993-10-01','YYYY-MM-DD'), TO_DATE('1966-07-08','YYYY-MM-DD') , 13);
-insert into staff (name, designation, hire_date, date_of_birth, facility_id) values ('Miscellaneous Robotor', 'Director', TO_DATE('1919-08-14','YYYY-MM-DD'), TO_DATE('1989-04-19','YYYY-MM-DD'), 14);
-insert into staff (name, designation, hire_date, date_of_birth, facility_id) values ('Musician Root', 'General', TO_DATE('2017-10-18','YYYY-MM-DD'), TO_DATE('1993-01-29','YYYY-MM-DD'), 15);
-insert into staff (name, designation, hire_date, date_of_birth, facility_id) values ('Messaging Robin', 'Director',TO_DATE('1990-12-10','YYYY-MM-DD'),TO_DATE('1967-12-09','YYYY-MM-DD'), 16);
+insert into staff (name, designation, hire_date, date_of_birth, facility_id) values ('Medical Robot', 'Director', TO_DATE('2019-06-21','YYYY-MM-DD') ,TO_DATE('1989-04-19','YYYY-MM-DD'), 41);
+insert into staff (name, designation, hire_date, date_of_birth, facility_id) values ('Musical Robert', 'Director',TO_DATE('2018-08-29','YYYY-MM-DD') , TO_DATE('1993-01-29','YYYY-MM-DD') , 42);
+insert into staff (name, designation, hire_date, date_of_birth, facility_id) values ('Muscular Rob', 'Director',TO_DATE('1993-10-12','YYYY-MM-DD') , TO_DATE('1967-12-09','YYYY-MM-DD') , 43);
+insert into staff (name, designation, hire_date, date_of_birth, facility_id) values ('Mechanical Roboto', 'General', TO_DATE('2019-06-21','YYYY-MM-DD'), TO_DATE('1988-05-18','YYYY-MM-DD'),41);
+insert into staff (name, designation, hire_date, date_of_birth, facility_id) values ('Millennium Roberten', 'Director', TO_DATE('2018-09-20','YYYY-MM-DD'), TO_DATE('1991-06-28','YYYY-MM-DD') , 42);
+insert into staff (name, designation, hire_date, date_of_birth, facility_id) values ('Missionary Robinson', 'General', TO_DATE('1993-10-01','YYYY-MM-DD'), TO_DATE('1966-07-08','YYYY-MM-DD') , 43);
+insert into staff (name, designation, hire_date, date_of_birth, facility_id) values ('Miscellaneous Robotor', 'Director', TO_DATE('1919-08-14','YYYY-MM-DD'), TO_DATE('1989-04-19','YYYY-MM-DD'), 41);
+insert into staff (name, designation, hire_date, date_of_birth, facility_id) values ('Musician Root', 'General', TO_DATE('2017-10-18','YYYY-MM-DD'), TO_DATE('1993-01-29','YYYY-MM-DD'), 42);
+insert into staff (name, designation, hire_date, date_of_birth, facility_id) values ('Messaging Robin', 'Director',TO_DATE('1990-12-10','YYYY-MM-DD'),TO_DATE('1967-12-09','YYYY-MM-DD'), 43);
 
 --Done
 insert into medical_staff (medical_staff_id, primary_department_code) values (21,'ER000');
