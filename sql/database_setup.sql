@@ -1,3 +1,4 @@
+--Team 4: dcbharma, dhkrishn, mvijaya2, zmathew
 --DEEPALI
 CREATE TABLE patient(
     patient_id NUMBER(10) PRIMARY KEY,
